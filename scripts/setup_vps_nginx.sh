@@ -7,7 +7,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 APP_DIR="${1:-$PROJECT_DIR}"
-DOMAIN="${2:-_}"
+DOMAIN="${2:-}"
+
+# --- Запрос домена, если не передан ---
+if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "_" ]; then
+  read -rp "Введите домен (например, example.com): " DOMAIN
+  if [ -z "$DOMAIN" ]; then
+    echo "Домен обязателен!"; exit 1
+  fi
+fi
 SERVICE_NAME="crypto-auth-site"
 NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
 ENV_FILE="${APP_DIR}/.env"
@@ -52,11 +60,14 @@ if [ ! -f "$ENV_FILE" ]; then
   touch "$ENV_FILE"
 fi
 
-echo
-echo "=== CryptoBot configuration (VPS) ==="
-echo "Enter CRYPTOBOT_TOKEN (input hidden). Leave empty to skip for now."
-read -r -s -p "CRYPTOBOT_TOKEN: " CRYPTOBOT_TOKEN
-echo
+if grep -q '^CRYPTOBOT_TOKEN=' "$ENV_FILE"; then
+  CRYPTOBOT_TOKEN=$(grep '^CRYPTOBOT_TOKEN=' "$ENV_FILE" | cut -d= -f2-)
+else
+  echo
+  echo "Введите CRYPTOBOT_TOKEN (скрытый ввод, можно оставить пустым):"
+  read -r -s -p "CRYPTOBOT_TOKEN: " CRYPTOBOT_TOKEN
+  echo
+fi
 
 SECRET_KEY="$(generate_secret_key)"
 upsert_env_var "SECRET_KEY" "$SECRET_KEY"
@@ -93,40 +104,72 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+
+# --- Nginx конфиг для 80 порта (редирект на https) и 443 (SSL) ---
 cat > "$NGINX_CONF" <<EOF
 server {
-    listen 80;
-    server_name ${DOMAIN};
+  listen 80;
+  server_name ${DOMAIN};
+  location /.well-known/acme-challenge/ {
+    root /var/www/html;
+  }
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
 
-    location /static {
-        alias ${APP_DIR}/static;
-    }
+server {
+  listen 443 ssl;
+  server_name ${DOMAIN};
 
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
+  ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+
+  location /static {
+    alias ${APP_DIR}/static;
+  }
+
+  location / {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
 }
 EOF
 
 ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${SERVICE_NAME}"
 rm -f /etc/nginx/sites-enabled/default
 
+
 systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}"
 systemctl restart "${SERVICE_NAME}"
-nginx -t
+
+nginx -t && systemctl restart nginx
+
+# --- Установка certbot и получение сертификата ---
+if ! command -v certbot >/dev/null 2>&1; then
+  echo "Устанавливаю certbot..."
+  apt install -y certbot python3-certbot-nginx
+fi
+
+echo "Получаю SSL-сертификат для ${DOMAIN}..."
+certbot --nginx --non-interactive --agree-tos --redirect -d "$DOMAIN" -m "admin@${DOMAIN}" || {
+  echo "Ошибка получения сертификата! Проверьте DNS и доступность домена."; exit 1;
+}
+
 systemctl restart nginx
 
 echo
-echo "Done. Service: ${SERVICE_NAME}, domain: ${DOMAIN}"
+echo "Готово! Сервис: ${SERVICE_NAME}, домен: ${DOMAIN}"
 echo "Env file: ${ENV_FILE}"
 if [ -n "${CRYPTOBOT_TOKEN}" ]; then
-  echo "CRYPTOBOT_TOKEN saved."
+  echo "CRYPTOBOT_TOKEN сохранён."
 else
-  echo "CRYPTOBOT_TOKEN not provided (you can add it later to ${ENV_FILE})."
+  echo "CRYPTOBOT_TOKEN не указан (можно добавить позже в ${ENV_FILE})."
 fi
-echo "Open: http://${DOMAIN}"
+echo "Откройте: https://${DOMAIN}"
