@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Личный кабинет</h2>
+<div class="grid">
+  <div class="card">
+    <h3>Баланс</h3>
+    <p>Бонусный: <b>{{ "%.2f"|format(user["bonus_balance"]) }}</b></p>
+    <p>Основной: <b>{{ "%.2f"|format(user["main_balance"]) }}</b></p>
+    <p>Порог перевода бонусов: > {{ threshold }}</p>
+  </div>
+
+  <form method="post" action="{{ url_for('transfer_bonus') }}" class="card">
+    <h3>Перевод бонусов в основной</h3>
+    <label>Сумма</label>
+    <input type="number" step="0.01" min="0.01" name="amount" required>
+    <button type="submit">Перевести</button>
+  </form>
+
+  <form method="post" action="{{ url_for('deposit') }}" class="card">
+    <h3>Пополнение через CryptoBot</h3>
+    <label>Сумма (грн)</label>
+    <input type="number" step="0.01" min="1" name="amount_uah" required>
+    <label>Валюта оплаты</label>
+    <select name="asset" required>
+      <option value="USDT">USDT</option>
+      <option value="TRX">TRX</option>
+      <option value="LTC">LTC</option>
+    </select>
+    <button type="submit">Создать инвойс</button>
+  </form>
+
+  <form method="post" action="{{ url_for('withdraw') }}" class="card">
+    <h3>Вывод через CryptoBot</h3>
+    <label>Сумма</label>
+    <input type="number" step="0.01" min="0.01" name="amount" required>
+    <label>Wallet/username для вывода</label>
+    <input type="text" name="wallet" required>
+    <button type="submit">Создать заявку на вывод</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Последние транзакции</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Тип</th>
+        <th>Сумма</th>
+        <th>Статус</th>
+        <th>Комментарий</th>
+        <th>Дата</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tx in txs %}
+      <tr>
+        <td>{{ tx["tx_type"] }}</td>
+        <td>{{ "%.2f"|format(tx["amount"]) }}</td>
+        <td>{{ tx["status"] }}</td>
+        <td>{{ tx["note"] }}</td>
+        <td>{{ tx["created_at"] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

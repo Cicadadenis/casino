@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="hero-badge">Реальный режим</div>
+  <h1>Casino Slot</h1>
+  <p>Выбор основного или бонусного счета. Каждый спин сразу записывается в базу данных.</p>
+  <a class="btn" href="{{ url_for('index') }}">Выйти на главную</a>
+</section>
+
+<div class="card" style="margin-top:16px;">
+  <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+    <button class="btn account-btn active" data-account="main" type="button">Основной: <span id="main-bal">{{ "%.2f"|format(user["main_balance"]) }}</span></button>
+    <button class="btn account-btn" data-account="bonus" type="button">Бонусный: <span id="bonus-bal">{{ "%.2f"|format(user["bonus_balance"]) }}</span></button>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+    <input id="bet-per-line" type="number" min="1" max="100" step="1" value="10" style="max-width:180px;" placeholder="Ставка за линию">
+    <input id="lines-count" type="number" min="1" max="9" step="1" value="{{ default_lines }}" style="max-width:180px;" placeholder="Линий">
+    <button id="spin-btn" class="btn" type="button">Крутить</button>
+  </div>
+  <p id="spin-msg" style="margin-top:8px;"></p>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>Барабаны</h3>
+  <div id="slot-grid" class="slot-grid">
+    <div>❔</div><div>❔</div><div>❔</div><div>❔</div><div>❔</div>
+    <div>❔</div><div>❔</div><div>❔</div><div>❔</div><div>❔</div>
+    <div>❔</div><div>❔</div><div>❔</div><div>❔</div><div>❔</div>
+  </div>
+</div>
+
+<script>
+let account = "main";
+const accountButtons = document.querySelectorAll(".account-btn");
+const spinBtn = document.getElementById("spin-btn");
+const msgEl = document.getElementById("spin-msg");
+const gridEl = document.getElementById("slot-grid");
+
+function setAccount(next) {
+  account = next;
+  accountButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.account === next));
+}
+
+function renderGrid(grid) {
+  if (!grid || !Array.isArray(grid)) return;
+  const rows = [0, 1, 2].map((r) => [0, 1, 2, 3, 4].map((c) => grid[c][r] || "❔"));
+  gridEl.innerHTML = rows.flat().map((s) => `<div>${s}</div>`).join("");
+}
+
+accountButtons.forEach((btn) => {
+  btn.addEventListener("click", () => setAccount(btn.dataset.account));
+});
+
+spinBtn.addEventListener("click", async () => {
+  const betPerLine = Number(document.getElementById("bet-per-line").value || 0);
+  const lines = Number(document.getElementById("lines-count").value || 0);
+  spinBtn.disabled = true;
+  msgEl.textContent = "Крутим...";
+  try {
+    const r = await fetch("/api/slot/spin", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({account, bet_per_line: betPerLine, lines})
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) {
+      msgEl.textContent = data.error || "Ошибка спина";
+      return;
+    }
+    renderGrid(data.grid);
+    document.getElementById("main-bal").textContent = Number(data.balances.main).toFixed(2);
+    document.getElementById("bonus-bal").textContent = Number(data.balances.bonus).toFixed(2);
+    msgEl.textContent = data.win > 0
+      ? `Выигрыш: +${data.win.toFixed(2)} | Ставка: ${data.total_bet.toFixed(2)}`
+      : `Без выигрыша | Ставка: ${data.total_bet.toFixed(2)}`;
+  } catch (_e) {
+    msgEl.textContent = "Сервер недоступен";
+  } finally {
+    spinBtn.disabled = false;
+  }
+});
+</script>
+{% endblock %}

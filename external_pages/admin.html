@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlotKing — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#c9a84c;--gold-light:#f0d080;--gold-dark:#a07828;
+  --dark:#080810;--dark2:#0f0f1a;--dark3:#161622;
+  --card:#12121e;--card2:#1a1a2a;
+  --border:rgba(201,168,76,0.15);--border2:rgba(255,255,255,0.06);
+  --text:#e8e0d0;--muted:#6b6578;
+  --green:#22c55e;--red:#ef4444;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 60% 40% at 10% 0%,rgba(139,92,246,0.07) 0%,transparent 60%),radial-gradient(ellipse 50% 30% at 90% 10%,rgba(201,168,76,0.08) 0%,transparent 60%);}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--dark);}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:48px 40px;width:100%;max-width:400px;box-shadow:0 0 80px rgba(201,168,76,0.08),0 40px 80px rgba(0,0,0,0.6);position:relative;z-index:1;}
+.login-logo{text-align:center;margin-bottom:32px;}
+.login-logo .icon{font-size:42px;display:block;filter:drop-shadow(0 0 16px rgba(201,168,76,0.7));margin-bottom:10px;}
+.login-logo h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--gold-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;}
+.login-logo p{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.login-field{margin-bottom:16px;}
+.login-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;}
+.login-field input{width:100%;padding:12px 16px;background:var(--dark3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color 0.2s;}
+.login-field input:focus{border-color:rgba(201,168,76,0.5);}
+.login-btn{width:100%;padding:14px;margin-top:8px;background:linear-gradient(135deg,var(--gold-dark),var(--gold),#d4aa50);border:none;border-radius:12px;color:#000;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;box-shadow:0 4px 20px rgba(201,168,76,0.3);}
+.login-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+.login-err{margin-top:12px;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;font-size:13px;text-align:center;display:none;}
+.login-err.show{display:block;}
+
+/* ADMIN APP */
+#admin-app{display:none;min-height:100vh;position:relative;z-index:1;}
+.adm-header{position:sticky;top:0;z-index:100;background:rgba(8,8,16,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.adm-logo{display:flex;align-items:center;gap:10px;}
+.adm-logo .icon{font-size:22px;filter:drop-shadow(0 0 10px rgba(201,168,76,0.6));}
+.adm-logo .name{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;background:linear-gradient(135deg,var(--gold),var(--gold-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;}
+.adm-logo .badge{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;padding:3px 8px;border-radius:999px;}
+.adm-right{display:flex;align-items:center;gap:12px;}
+.adm-user{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.adm-time{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);}
+.adm-logout{padding:7px 14px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;transition:all 0.2s;font-family:'Inter',sans-serif;}
+.adm-logout:hover{background:rgba(239,68,68,0.2);}
+
+.adm-main{max-width:1400px;margin:0 auto;padding:32px 24px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.stat-card .sc-icon{font-size:28px;margin-bottom:10px;display:block;}
+.stat-card .sc-val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--gold-light);line-height:1;}
+.stat-card .sc-lbl{font-size:11px;color:var(--muted);margin-top:6px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px;}
+.sec-head h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;}
+.sec-head .sep{flex:1;height:1px;background:var(--border);}
+.toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:200px;}
+.search-wrap input{width:100%;padding:10px 16px 10px 38px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.search-wrap input:focus{border-color:rgba(201,168,76,0.4);}
+.search-wrap .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);}
+.sort-btn{padding:10px 16px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.sort-btn:hover,.sort-btn.active{border-color:rgba(201,168,76,0.4);color:var(--gold);}
+.refresh-btn{padding:10px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:12px;color:var(--gold);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.refresh-btn:hover{background:rgba(201,168,76,0.2);}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.tbl-head{display:grid;grid-template-columns:50px 1fr 140px 140px 180px;padding:12px 20px;background:rgba(201,168,76,0.05);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);gap:8px;}
+.tbl-body{max-height:calc(100vh - 360px);overflow-y:auto;}
+.tbl-body::-webkit-scrollbar{width:4px;}
+.tbl-body::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.2);border-radius:2px;}
+.tbl-row{display:grid;grid-template-columns:50px 1fr 140px 140px 180px;padding:14px 20px;border-bottom:1px solid var(--border2);align-items:center;gap:8px;transition:background 0.15s;}
+.tbl-row:last-child{border-bottom:none;}
+.tbl-row:hover{background:rgba(255,255,255,0.02);}
+.tbl-row.protected{opacity:0.45;}
+.uid-cell{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+.user-cell{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.user-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'JetBrains Mono',monospace;}
+.bal-cell{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--gold-light);}
+.bonus-cell{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#c4b5fd;}
+.del-btn{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#ef4444;font-family:'Inter',sans-serif;transition:all 0.2s;white-space:nowrap;}
+.del-btn:hover{background:rgba(239,68,68,0.2);border-color:#ef4444;}
+.prot-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:3px 8px;border-radius:999px;}
+.tbl-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:14px;}
+.tbl-empty .ei{font-size:36px;display:block;margin-bottom:12px;}
+.loading-row{padding:40px 20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--muted);}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.progress-bar{height:3px;background:rgba(201,168,76,0.1);border-radius:2px;margin:0 20px 4px;overflow:hidden;display:none;}
+.progress-bar.show{display:block;}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.3s;}
+.progress-label{text-align:center;font-size:11px;color:var(--muted);padding:0 20px 12px;font-family:'JetBrains Mono',monospace;display:none;}
+.progress-label.show{display:block;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.confirm-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:380px;width:90%;box-shadow:0 0 60px rgba(239,68,68,0.1),0 40px 60px rgba(0,0,0,0.6);}
+.confirm-icon{font-size:36px;text-align:center;margin-bottom:16px;}
+.confirm-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;text-align:center;margin-bottom:8px;}
+.confirm-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:24px;}
+.confirm-sub strong{color:var(--text);}
+.confirm-btns{display:flex;gap:10px;}
+.confirm-cancel{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;background:var(--dark3);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;transition:all 0.2s;}
+.confirm-delete{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#b91c1c,#ef4444);border:none;color:#fff;font-family:'Inter',sans-serif;transition:all 0.2s;box-shadow:0 4px 16px rgba(239,68,68,0.3);}
+.confirm-delete:hover{filter:brightness(1.1);}
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all 0.3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#4ade80;}
+.toast.err{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;}
+
+@media(max-width:800px){
+  .tbl-head,.tbl-row{grid-template-columns:40px 1fr 110px 90px 120px;}
+  .tbl-head .th-bonus,.tbl-row .bonus-cell{display:none;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .adm-time,.adm-user{display:none;}
+}
+
+/* Coin modal */
+.coin-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:400px;width:90%;box-shadow:0 0 60px rgba(201,168,76,0.12),0 40px 60px rgba(0,0,0,0.6);}
+.coin-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;text-align:center;margin-bottom:6px;}
+.coin-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:22px;}
+.coin-tabs{display:flex;gap:8px;margin-bottom:20px;}
+.coin-tab{flex:1;padding:10px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--dark3);color:var(--muted);transition:all .2s;font-family:'Inter',sans-serif;text-align:center;}
+.coin-tab.active-main{border-color:rgba(201,168,76,0.6);background:rgba(201,168,76,0.1);color:var(--gold);}
+.coin-tab.active-bonus{border-color:rgba(196,181,253,0.6);background:rgba(196,181,253,0.08);color:#c4b5fd;}
+.coin-input-wrap{position:relative;margin-bottom:20px;}
+.coin-input-wrap input{width:100%;padding:13px 16px;background:var(--dark3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;outline:none;transition:border-color .2s;text-align:center;}
+.coin-input-wrap input:focus{border-color:rgba(201,168,76,0.4);}
+.coin-presets{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.coin-preset{flex:1;min-width:60px;padding:7px 4px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--dark3);color:var(--muted);transition:all .2s;font-family:'JetBrains Mono',monospace;text-align:center;}
+.coin-preset:hover{border-color:rgba(201,168,76,0.4);color:var(--gold);}
+.coin-btns{display:flex;gap:10px;}
+.coin-cancel{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;background:var(--dark3);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;}
+.coin-submit{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:none;color:#000;font-family:'Inter',sans-serif;transition:all .2s;}
+.coin-submit.main-mode{background:linear-gradient(135deg,var(--gold-dark),var(--gold));box-shadow:0 4px 16px rgba(201,168,76,0.3);}
+.coin-submit.bonus-mode{background:linear-gradient(135deg,#7c3aed,#c4b5fd);box-shadow:0 4px 16px rgba(196,181,253,0.2);color:#fff;}
+.coin-submit:hover{filter:brightness(1.1);}
+.give-btn{padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);color:var(--gold);font-family:'Inter',sans-serif;transition:all .2s;white-space:nowrap;}
+.give-btn:hover{background:rgba(201,168,76,0.2);border-color:var(--gold);}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">👑</span>
+      <h1>SlotKing</h1>
+      <p>Admin Panel</p>
+    </div>
+    <div class="login-field">
+      <label>Пароль администратора</label>
+      <input type="password" id="adm-pw" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-err" id="login-err">Неверный пароль</div>
+  </div>
+</div>
+
+<div id="admin-app">
+  <header class="adm-header">
+    <div class="adm-logo">
+      <span class="icon">👑</span>
+      <span class="name">SlotKing</span>
+      <span class="badge">ADMIN</span>
+    </div>
+    <div class="adm-right">
+      <span class="adm-user" id="adm-user"></span>
+      <span class="adm-time" id="adm-clock"></span>
+      <button class="adm-logout" onclick="doLogout()">Выйти</button>
+    </div>
+  </header>
+
+  <main class="adm-main">
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="sc-icon">👥</span>
+        <div class="sc-val" id="st-total">—</div>
+        <div class="sc-lbl">Всего пользователей</div>
+      </div>
+      <div class="stat-card">
+        <span class="sc-icon">💰</span>
+        <div class="sc-val" id="st-bal">—</div>
+        <div class="sc-lbl">Монет на основных счетах</div>
+      </div>
+      <div class="stat-card">
+        <span class="sc-icon">🎁</span>
+        <div class="sc-val" id="st-bonus">—</div>
+        <div class="sc-lbl">Монет на бонусных счетах</div>
+      </div>
+      <div class="stat-card">
+        <span class="sc-icon">🎮</span>
+        <div class="sc-val" id="st-games">—</div>
+        <div class="sc-lbl">Игр сыграно</div>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <h2>Пользователи</h2>
+      <div class="sep"></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input type="text" id="search-inp" placeholder="Поиск по имени или email..." oninput="renderTable()">
+      </div>
+      <button class="sort-btn active" id="sort-bal" onclick="setSort('bal')">По балансу ↓</button>
+      <button class="sort-btn" id="sort-name" onclick="setSort('name')">По имени</button>
+      <button class="sort-btn" id="sort-uid" onclick="setSort('uid')">По ID</button>
+      <button class="refresh-btn" onclick="loadUsers()">↻ Обновить</button>
+    </div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <div class="th-uid">ID</div>
+        <div>Пользователь</div>
+        <div>Основной счёт</div>
+        <div class="th-bonus">Бонусный счёт</div>
+        <div>Действие</div>
+      </div>
+      <div class="progress-bar" id="prog-bar"><div class="progress-fill" id="prog-fill"></div></div>
+      <div class="progress-label" id="prog-label"></div>
+      <div class="tbl-body" id="tbl-body">
+        <div class="loading-row"><span class="spinner"></span>Загрузка...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="del-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Удалить пользователя?</div>
+    <div class="confirm-sub" id="del-sub">Это действие необратимо.</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeDelModal()">Отмена</button>
+      <button class="confirm-delete" onclick="confirmDelete()">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="coin-modal">
+  <div class="coin-box">
+    <div class="confirm-icon">💰</div>
+    <div class="coin-title">Выдать монеты</div>
+    <div class="coin-sub" id="coin-sub">Пользователь</div>
+    <div class="coin-tabs">
+      <div class="coin-tab active-main" id="tab-main" onclick="setCoinTab('main')">💰 Основной счёт</div>
+      <div class="coin-tab" id="tab-bonus" onclick="setCoinTab('bonus')">🎁 Бонусный счёт</div>
+    </div>
+    <div class="coin-input-wrap">
+      <input type="number" id="coin-amount" placeholder="0" min="1">
+    </div>
+    <div class="coin-presets">
+      <div class="coin-preset" onclick="setCoinPreset(100)">100</div>
+      <div class="coin-preset" onclick="setCoinPreset(500)">500</div>
+      <div class="coin-preset" onclick="setCoinPreset(1000)">1 000</div>
+      <div class="coin-preset" onclick="setCoinPreset(5000)">5 000</div>
+      <div class="coin-preset" onclick="setCoinPreset(10000)">10 000</div>
+    </div>
+    <div class="coin-btns">
+      <button class="coin-cancel" onclick="closeCoinModal()">Отмена</button>
+      <button class="coin-submit main-mode" id="coin-submit-btn" onclick="confirmGiveCoins()">Выдать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASS   = 'cicada3301';
+const ADMIN_EMAIL  = 'satanasat3301@gmail.com';
+const API_BASE     = '';
+const MAIN_CID     = 2;
+const BONUS_CID    = 1;
+const PROTECTED_UIDS = new Set([1, 2]);
+const UID_SCAN_MAX = 200; // сканируем UID от 1 до этого числа
+
+let users        = [];
+let wallets      = {};
+let sortBy       = 'bal';
+let pendingDeleteUid = null;
+let apiToken     = null;
+
+// ── AUTH ──
+async function doLogin(){
+  const pw = document.getElementById('adm-pw').value;
+  if(pw !== ADMIN_PASS){
+    showLoginErr('Неверный пароль');
+    return;
+  }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'Вход...';
+
+  // Получаем токен через /signin
+  try{
+    const r = await fetch(API_BASE + '/signin', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: ADMIN_EMAIL, secret: pw})
+    });
+    const d = await r.json();
+    if(r.ok && d.access){
+      apiToken = d.access;
+      sessionStorage.setItem('adm_token', apiToken);
+      enterAdmin();
+    } else {
+      showLoginErr(d.what || 'Ошибка входа на сервер');
+    }
+  } catch(e){
+    showLoginErr('Сервер недоступен');
+  }
+  btn.disabled = false;
+  btn.textContent = 'Войти';
+}
+
+function showLoginErr(msg){
+  const err = document.getElementById('login-err');
+  err.textContent = msg;
+  err.classList.add('show');
+  setTimeout(()=>err.classList.remove('show'), 3000);
+  document.getElementById('adm-pw').value = '';
+}
+
+function enterAdmin(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-app').style.display = 'block';
+  document.getElementById('adm-user').textContent = ADMIN_EMAIL;
+  startClock();
+  loadUsers();
+}
+
+function doLogout(){
+  sessionStorage.removeItem('adm_token');
+  apiToken = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-app').style.display = 'none';
+  document.getElementById('adm-pw').value = '';
+}
+
+document.getElementById('adm-pw').addEventListener('keydown', e=>{
+  if(e.key==='Enter') doLogin();
+});
+
+// Auto-restore session
+(async()=>{
+  const saved = sessionStorage.getItem('adm_token');
+  if(saved){
+    apiToken = saved;
+    // Verify token is still valid
+    const r = await apiCall('POST', '/prop/wallet/get', {cid: MAIN_CID, uid: 41});
+    if(r.ok){
+      enterAdmin();
+    } else {
+      sessionStorage.removeItem('adm_token');
+      apiToken = null;
+    }
+  }
+})();
+
+// ── CLOCK ──
+function startClock(){
+  function tick(){
+    const now = new Date();
+    document.getElementById('adm-clock').textContent =
+      now.toLocaleDateString('ru-RU') + ' ' + now.toLocaleTimeString('ru-RU');
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+// ── API ──
+async function apiCall(method, path, body){
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if(apiToken) opts.headers['Authorization'] = 'Bearer ' + apiToken;
+  if(body) opts.body = JSON.stringify(body);
+  try{
+    const r = await fetch(API_BASE + path, opts);
+    const text = await r.text();
+    let data; try{ data = JSON.parse(text); } catch(_){ data = {what: text}; }
+    return {ok: r.ok, status: r.status, data};
+  } catch(e){ return {ok:false, status:0, data:{what:'Сервер недоступен'}}; }
+}
+
+// ── LOAD USERS ──
+// Slotopol не имеет /user/list — сканируем UID батчами через /user/is
+async function loadUsers(){
+  document.getElementById('tbl-body').innerHTML = '<div class="loading-row"><span class="spinner"></span>Сканирование пользователей...</div>';
+  document.getElementById('prog-bar').classList.add('show');
+  document.getElementById('prog-label').classList.add('show');
+
+  const BATCH = 20;
+  const found = [];
+
+  for(let start = 1; start <= UID_SCAN_MAX; start += BATCH){
+    const batch = [];
+    for(let uid = start; uid < start + BATCH && uid <= UID_SCAN_MAX; uid++){
+      batch.push({uid});
+    }
+    const pct = Math.round((start / UID_SCAN_MAX) * 100);
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-label').textContent = `Сканирование... ${start}–${Math.min(start+BATCH-1, UID_SCAN_MAX)} / ${UID_SCAN_MAX}`;
+
+    const r = await apiCall('POST', '/user/is', {list: batch});
+    if(r.ok && r.data?.list){
+      r.data.list.forEach(u => { if(u.uid) found.push(u); });
+    }
+  }
+
+  document.getElementById('prog-bar').classList.remove('show');
+  document.getElementById('prog-label').classList.remove('show');
+  document.getElementById('prog-fill').style.width = '0%';
+
+  users = found;
+
+  if(users.length === 0){
+    document.getElementById('tbl-body').innerHTML = '<div class="tbl-empty"><span class="ei">👥</span>Пользователи не найдены</div>';
+    return;
+  }
+
+  // Загружаем балансы параллельно
+  wallets = {};
+  await Promise.all(users.map(async u => {
+    const uid = u.uid;
+    const [rm, rb] = await Promise.all([
+      apiCall('POST', '/prop/wallet/get', {cid: MAIN_CID,  uid}),
+      apiCall('POST', '/prop/wallet/get', {cid: BONUS_CID, uid})
+    ]);
+    wallets[uid] = {
+      main:  rm.ok && typeof rm.data?.wallet === 'number' ? Math.floor(rm.data.wallet)  : 0,
+      bonus: rb.ok && typeof rb.data?.wallet === 'number' ? Math.floor(rb.data.wallet) : 0,
+    };
+  }));
+
+  updateStats();
+  renderTable();
+}
+
+// ── STATS ──
+function updateStats(){
+  let totalBal = 0, totalBonus = 0;
+  users.forEach(u => {
+    totalBal   += wallets[u.uid]?.main  || 0;
+    totalBonus += wallets[u.uid]?.bonus || 0;
+  });
+  document.getElementById('st-total').textContent  = users.length;
+  document.getElementById('st-bal').textContent    = fmtNum(totalBal);
+  document.getElementById('st-bonus').textContent  = fmtNum(totalBonus);
+  document.getElementById('st-games').textContent  = '—';
+}
+
+function fmtNum(n){
+  if(n >= 1_000_000) return (n/1_000_000).toFixed(1)+'M';
+  if(n >= 1_000)     return (n/1_000).toFixed(1)+'K';
+  return n.toString();
+}
+
+// ── SORT ──
+function setSort(s){
+  sortBy = s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sort-'+s).classList.add('active');
+  renderTable();
+}
+
+// ── RENDER ──
+function renderTable(){
+  const q = document.getElementById('search-inp').value.trim().toLowerCase();
+  let list = users.filter(u => {
+    if(!q) return true;
+    return (u.name||'').toLowerCase().includes(q) ||
+           (u.email||'').toLowerCase().includes(q) ||
+           String(u.uid).includes(q);
+  });
+
+  list = list.slice().sort((a, b) => {
+    if(sortBy === 'bal'){
+      const ba = (wallets[a.uid]?.main||0) + (wallets[a.uid]?.bonus||0);
+      const bb = (wallets[b.uid]?.main||0) + (wallets[b.uid]?.bonus||0);
+      return bb - ba;
+    }
+    if(sortBy === 'name') return (a.name||'').localeCompare(b.name||'');
+    if(sortBy === 'uid')  return a.uid - b.uid;
+    return 0;
+  });
+
+  if(list.length === 0){
+    document.getElementById('tbl-body').innerHTML = '<div class="tbl-empty"><span class="ei">🔍</span>Пользователи не найдены</div>';
+    return;
+  }
+
+  const html = list.map(u => {
+    const prot = PROTECTED_UIDS.has(Number(u.uid));
+    const w    = wallets[u.uid] || {main:0, bonus:0};
+    return `
+    <div class="tbl-row ${prot?'protected':''}">
+      <div class="uid-cell">#${u.uid}</div>
+      <div class="user-cell">
+        <span class="user-name">${esc(u.name||'—')}</span>
+        <span class="user-email">${esc(u.email||'—')}</span>
+      </div>
+      <div class="bal-cell">${w.main.toLocaleString('ru-RU')} <span style="font-size:10px;opacity:.5">м</span></div>
+      <div class="bonus-cell">${w.bonus.toLocaleString('ru-RU')} <span style="font-size:10px;opacity:.5">б</span></div>
+      <div>
+        ${prot
+          ? '<span class="prot-badge">СИСТЕМА</span>'
+          : `<div style="display:flex;gap:6px;">
+               <button class="give-btn" onclick="askGiveCoins(${u.uid},'${esc(u.name||'')}')">+ Монеты</button>
+               <button class="del-btn" onclick="askDelete(${u.uid},'${esc(u.name||'')}','${esc(u.email||'')}')">Удалить</button>
+             </div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('tbl-body').innerHTML = html;
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ── GIVE COINS ──
+let pendingCoinUid = null;
+let coinTab = 'main';
+
+function askGiveCoins(uid, name){
+  pendingCoinUid = uid;
+  document.getElementById('coin-sub').textContent = name + ' (#' + uid + ')';
+  document.getElementById('coin-amount').value = '';
+  setCoinTab('main');
+  document.getElementById('coin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('coin-amount').focus(), 100);
+}
+
+function closeCoinModal(){
+  document.getElementById('coin-modal').classList.remove('open');
+  pendingCoinUid = null;
+}
+
+function setCoinTab(tab){
+  coinTab = tab;
+  const tMain  = document.getElementById('tab-main');
+  const tBonus = document.getElementById('tab-bonus');
+  const btn    = document.getElementById('coin-submit-btn');
+  if(tab === 'main'){
+    tMain.className  = 'coin-tab active-main';
+    tBonus.className = 'coin-tab';
+    btn.className    = 'coin-submit main-mode';
+  } else {
+    tMain.className  = 'coin-tab';
+    tBonus.className = 'coin-tab active-bonus';
+    btn.className    = 'coin-submit bonus-mode';
+  }
+}
+
+function setCoinPreset(val){
+  document.getElementById('coin-amount').value = val;
+}
+
+async function confirmGiveCoins(){
+  if(!pendingCoinUid) return;
+  const amount = parseFloat(document.getElementById('coin-amount').value);
+  if(!amount || amount <= 0){ showToast('Введите сумму', 'err'); return; }
+
+  const uid = pendingCoinUid;
+  const cid = coinTab === 'main' ? MAIN_CID : BONUS_CID;
+  const label = coinTab === 'main' ? 'основной' : 'бонусный';
+
+  closeCoinModal();
+
+  const r = await apiCall('POST', '/prop/wallet/add', {cid, uid, sum: amount});
+  if(r.ok){
+    // Обновляем локальный кошелёк
+    if(!wallets[uid]) wallets[uid] = {main:0, bonus:0};
+    if(coinTab === 'main') wallets[uid].main  += amount;
+    else                   wallets[uid].bonus += amount;
+    updateStats();
+    renderTable();
+    showToast(`✓ +${amount.toLocaleString('ru-RU')} монет на ${label} счёт`, 'ok');
+  } else {
+    showToast('Ошибка: ' + (r.data?.what || 'не удалось выдать монеты'), 'err');
+  }
+}
+
+// ── DELETE ──
+function askDelete(uid, name, email){
+  pendingDeleteUid = uid;
+  document.getElementById('del-sub').innerHTML =
+    `Пользователь <strong>${esc(name)}</strong><br><code style="font-size:11px;color:var(--muted)">${esc(email)}</code><br><br>Все данные будут удалены безвозвратно.`;
+  document.getElementById('del-modal').classList.add('open');
+}
+function closeDelModal(){
+  document.getElementById('del-modal').classList.remove('open');
+  pendingDeleteUid = null;
+}
+async function confirmDelete(){
+  if(!pendingDeleteUid) return;
+  const uid = pendingDeleteUid;
+  closeDelModal();
+  const r = await apiCall('POST', '/user/delete', {uid});
+  if(r.ok){
+    users = users.filter(u => u.uid !== uid);
+    delete wallets[uid];
+    updateStats();
+    renderTable();
+    showToast('✓ Пользователь удалён', 'ok');
+  } else {
+    showToast('Ошибка: ' + (r.data?.what || 'не удалось удалить'), 'err');
+  }
+}
+
+// ── TOAST ──
+function showToast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+document.getElementById('del-modal').addEventListener('click', function(e){ if(e.target===this) closeDelModal(); });
+document.getElementById('coin-modal').addEventListener('click', function(e){ if(e.target===this) closeCoinModal(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeDelModal(); closeCoinModal(); } });
+</script>
+</body>
+</html>

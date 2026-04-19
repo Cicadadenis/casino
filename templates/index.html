@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="hero-badge">Премиум казино оформление</div>
+  <h1>Игровой кабинет в стиле <span class="hl">SlotKing</span></h1>
+  <p>Регистрация выдает 1000 бонусных монет. Перевод бонусов на основной счет доступен при бонусном балансе больше 10000.</p>
+  {% if user %}
+    <a class="btn" href="{{ url_for('cabinet') }}">Открыть кабинет</a>
+  {% else %}
+    <a class="btn" href="{{ url_for('register') }}">Создать аккаунт</a>
+  {% endif %}
+</section>
+
+<div class="grid" style="margin-top:16px;">
+  <div class="card">
+    <h3>Игры</h3>
+    <p>Запуск Gnome Slots, Book of Ra и Resident.</p>
+    <a class="btn" href="{{ url_for('games_menu') }}">Открыть каталог игр</a>
+  </div>
+</div>
+{% endblock %}

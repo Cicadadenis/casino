@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="hero-badge">Каталог игр</div>
+  <h1>Запуск игровых страниц</h1>
+  <p>Добавлены игры из ваших HTML-файлов: Gnome, Book of Ra и Resident.</p>
+</section>
+
+<div class="grid" style="margin-top:16px;">
+  <div class="card">
+    <h3>Casino Slot (DB)</h3>
+    <p>Игра с записью каждого спина в БД и выбором счета.</p>
+    <a class="btn" href="{{ url_for('casino') }}">Открыть</a>
+  </div>
+  <div class="card">
+    <h3>Gnome Slots</h3>
+    <p>Оригинальный файл `gnome_redesign.html`.</p>
+    <a class="btn" href="{{ url_for('play_game', game_key='gnome') }}" target="_blank">Открыть игру</a>
+  </div>
+  <div class="card">
+    <h3>Book of Ra</h3>
+    <p>Оригинальный файл `book-of-ra-redesign.html`.</p>
+    <a class="btn" href="{{ url_for('play_game', game_key='book-of-ra') }}" target="_blank">Открыть игру</a>
+  </div>
+  <div class="card">
+    <h3>Resident Slots</h3>
+    <p>Оригинальный файл `resident.html`.</p>
+    <a class="btn" href="{{ url_for('play_game', game_key='resident') }}" target="_blank">Открыть игру</a>
+  </div>
+</div>
+{% endblock %}
