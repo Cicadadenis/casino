@@ -91,8 +91,7 @@ upsert_env_var "CRYPTOBOT_API_URL" "https://pay.crypt.bot/api"
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt gunicorn
+pip install -r requirements.txt gunicorn --break-system-packages
 
 
 # --- Права на файлы сайта ---
@@ -100,7 +99,85 @@ chown -R www-data:www-data "$APP_DIR"
 find "$APP_DIR" -type d -exec chmod 750 {} \;
 find "$APP_DIR" -type f -exec chmod 640 {} \;
 
-python3 scripts/init_db.py
+if [ -f "scripts/init_db.py" ]; then
+  python3 scripts/init_db.py
+else
+  echo "Warning: scripts/init_db.py not found, skipping database initialization"
+fi
+
+# --- Auto-detect best service configuration ---
+test_service_config() {
+  local test_cmd="$1"
+  local config_name="$2"
+  
+  echo "Testing ${config_name}..."
+  cd "$APP_DIR"
+  source .venv/bin/activate
+  
+  if timeout 5 bash -c "$test_cmd" 2>/dev/null; then
+    echo "SUCCESS: ${config_name} works!"
+    return 0
+  else
+    echo "FAILED: ${config_name}"
+    return 1
+  fi
+}
+
+# Try different configurations
+SERVICE_CONFIG=""
+if test_service_config "${APP_DIR}/.venv/bin/python -m gunicorn -w 1 -b 127.0.0.1:8000 app:app --check-config" "gunicorn app:app"; then
+  SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python -m gunicorn -w 2 -b 127.0.0.1:8000 app:app"
+elif test_service_config "${APP_DIR}/.venv/bin/python -c 'import app; print(\"OK\")'" "import app"; then
+  # Check if app has Flask app object
+  if test_service_config "${APP_DIR}/.venv/bin/python -c 'import app; print(hasattr(app, \"app\"))'" "app has app object"; then
+    SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python -m gunicorn -w 2 -b 127.0.0.1:8000 app:app"
+  else
+    # Create a wrapper for gunicorn
+    cat > "${APP_DIR}/gunicorn_wrapper.py" <<PY
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+import app
+
+# Try to find the Flask app
+flask_app = None
+if hasattr(app, 'app'):
+    flask_app = app.app
+elif hasattr(app, 'create_app'):
+    flask_app = app.create_app()
+else:
+    # Try common patterns
+    for attr in ['application', 'wsgi_app']:
+        if hasattr(app, attr):
+            flask_app = getattr(app, attr)
+            break
+    # Try to get any callable object
+    if flask_app is None:
+        for name in dir(app):
+            obj = getattr(app, name)
+            if hasattr(obj, '__call__') and not name.startswith('_'):
+                flask_app = obj
+                break
+
+if flask_app is None:
+    print("ERROR: Could not find Flask app object")
+    print("Available attributes:", [name for name in dir(app) if not name.startswith('_')])
+    sys.exit(1)
+
+print("Found Flask app:", type(flask_app))
+PY
+    SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python -m gunicorn -w 2 -b 127.0.0.1:8000 gunicorn_wrapper:flask_app"
+  fi
+elif test_service_config "${APP_DIR}/.venv/bin/python app.py" "direct python app.py"; then
+  SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python app.py"
+elif test_service_config "${APP_DIR}/.venv/bin/python -c 'from app import create_app; create_app()'" "app factory"; then
+  SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python -m gunicorn -w 2 -b 127.0.0.1:8000 \"app:create_app()\""
+else
+  echo "WARNING: Could not determine correct service config, using default"
+  SERVICE_CONFIG="ExecStart=${APP_DIR}/.venv/bin/python -m gunicorn -w 2 -b 127.0.0.1:8000 app:app"
+fi
+
+echo "Using service config: ${SERVICE_CONFIG}"
 
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
 [Unit]
@@ -108,12 +185,13 @@ Description=Crypto Auth Site
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
+User=root
+Group=root
 WorkingDirectory=${APP_DIR}
 Environment="PATH=${APP_DIR}/.venv/bin"
-ExecStart=${APP_DIR}/.venv/bin/gunicorn -w 2 -b 127.0.0.1:8000 "app:create_app()"
+${SERVICE_CONFIG}
 Restart=always
+RestartSec=3
 
 [Install]
 WantedBy=multi-user.target
@@ -143,9 +221,11 @@ ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${SERVICE_NAME}"
 rm -f /etc/nginx/sites-enabled/default
 
 
+# Force stop and restart with new configuration
+systemctl stop "${SERVICE_NAME}" || true
 systemctl daemon-reload
 systemctl enable "${SERVICE_NAME}"
-systemctl restart "${SERVICE_NAME}"
+systemctl start "${SERVICE_NAME}"
 
 
 nginx -t && systemctl restart nginx
@@ -157,8 +237,11 @@ if ! command -v certbot >/dev/null 2>&1; then
 fi
 
 echo "Получаю SSL-сертификат для ${DOMAIN}..."
-certbot certonly --webroot -w /var/www/html --non-interactive --agree-tos -d "$DOMAIN" -m "admin@${DOMAIN}" || {
-  echo "Ошибка получения сертификата! Проверьте DNS и доступность домена."; exit 1;
+certbot certonly --webroot -w /var/www/html --non-interactive --agree-tos -d "$DOMAIN" -m "admin@${DOMAIN}" --staging || {
+  echo "Ошибка получения сертификата! Пробую без staging..."
+  certbot certonly --webroot -w /var/www/html --non-interactive --agree-tos -d "$DOMAIN" -m "admin@${DOMAIN}" || {
+    echo "Ошибка получения сертификата! Проверьте DNS и доступность домена."; exit 1;
+  }
 }
 
 # --- Теперь обновляем nginx-конфиг для 80+443 (SSL) ---
