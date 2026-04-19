@@ -94,6 +94,12 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt gunicorn
 
+
+# --- Права на файлы сайта ---
+chown -R www-data:www-data "$APP_DIR"
+find "$APP_DIR" -type d -exec chmod 750 {} \;
+find "$APP_DIR" -type f -exec chmod 640 {} \;
+
 python3 scripts/init_db.py
 
 cat > "/etc/systemd/system/${SERVICE_NAME}.service" <<EOF
@@ -202,3 +208,11 @@ else
   echo "CRYPTOBOT_TOKEN не указан (можно добавить позже в ${ENV_FILE})."
 fi
 echo "Откройте: https://${DOMAIN}"
+
+# --- Диагностика статуса и логов сервиса ---
+echo
+echo "==== STATUS systemd-сервиса ===="
+systemctl status --no-pager "${SERVICE_NAME}"
+echo
+echo "==== Последние 30 строк лога (journalctl) ===="
+journalctl -u "${SERVICE_NAME}" -n 30 --no-pager
