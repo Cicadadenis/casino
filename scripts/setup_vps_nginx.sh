@@ -9,6 +9,14 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 APP_DIR="${1:-$PROJECT_DIR}"
 DOMAIN="${2:-}"
 
+sanitize_domain() {
+  local d="$1"
+  d="${d#http://}"
+  d="${d#https://}"
+  d="${d%%/*}"
+  d="${d%%:}"
+  echo "$d"
+}
 # --- Запрос домена, если не передан ---
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "_" ]; then
   read -rp "Введите домен (например, example.com): " DOMAIN
@@ -16,6 +24,7 @@ if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "_" ]; then
     echo "Домен обязателен!"; exit 1
   fi
 fi
+DOMAIN="$(sanitize_domain "$DOMAIN")"
 SERVICE_NAME="crypto-auth-site"
 NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
 ENV_FILE="${APP_DIR}/.env"
@@ -105,7 +114,8 @@ WantedBy=multi-user.target
 EOF
 
 
-# --- Nginx конфиг для 80 порта (редирект на https) и 443 (SSL) ---
+
+# --- Nginx конфиг только для 80 порта (без SSL) ---
 cat > "$NGINX_CONF" <<EOF
 server {
   listen 80;
@@ -114,7 +124,47 @@ server {
     root /var/www/html;
   }
   location / {
-    return 301 https://$host$request_uri;
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+  }
+}
+EOF
+
+ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${SERVICE_NAME}"
+rm -f /etc/nginx/sites-enabled/default
+
+
+systemctl daemon-reload
+systemctl enable "${SERVICE_NAME}"
+systemctl restart "${SERVICE_NAME}"
+
+
+nginx -t && systemctl restart nginx
+
+# --- Установка certbot и получение сертификата ---
+if ! command -v certbot >/dev/null 2>&1; then
+  echo "Устанавливаю certbot..."
+  apt install -y certbot python3-certbot-nginx
+fi
+
+echo "Получаю SSL-сертификат для ${DOMAIN}..."
+certbot certonly --webroot -w /var/www/html --non-interactive --agree-tos -d "$DOMAIN" -m "admin@${DOMAIN}" || {
+  echo "Ошибка получения сертификата! Проверьте DNS и доступность домена."; exit 1;
+}
+
+# --- Теперь обновляем nginx-конфиг для 80+443 (SSL) ---
+cat > "$NGINX_CONF" <<EOF
+server {
+  listen 80;
+  server_name ${DOMAIN};
+  location /.well-known/acme-challenge/ {
+    root /var/www/html;
+  }
+  location / {
+    return 301 https://\$host\$request_uri;
   }
 }
 
@@ -133,36 +183,15 @@ server {
 
   location / {
     proxy_pass http://127.0.0.1:8000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
   }
 }
 EOF
 
-ln -sf "$NGINX_CONF" "/etc/nginx/sites-enabled/${SERVICE_NAME}"
-rm -f /etc/nginx/sites-enabled/default
-
-
-systemctl daemon-reload
-systemctl enable "${SERVICE_NAME}"
-systemctl restart "${SERVICE_NAME}"
-
 nginx -t && systemctl restart nginx
-
-# --- Установка certbot и получение сертификата ---
-if ! command -v certbot >/dev/null 2>&1; then
-  echo "Устанавливаю certbot..."
-  apt install -y certbot python3-certbot-nginx
-fi
-
-echo "Получаю SSL-сертификат для ${DOMAIN}..."
-certbot --nginx --non-interactive --agree-tos --redirect -d "$DOMAIN" -m "admin@${DOMAIN}" || {
-  echo "Ошибка получения сертификата! Проверьте DNS и доступность домена."; exit 1;
-}
-
-systemctl restart nginx
 
 echo
 echo "Готово! Сервис: ${SERVICE_NAME}, домен: ${DOMAIN}"
