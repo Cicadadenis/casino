@@ -2,10 +2,46 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Gnome Slots</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gnome">
+<meta name="theme-color" content="#0a1808">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Gnome%22%2C%22short_name%22%3A%22Gnome%22%2C%22display%22%3A%22fullscreen%22%2C%22orientation%22%3A%22landscape%22%2C%22background_color%22%3A%22%230a1808%22%2C%22theme_color%22%3A%22%230a1808%22%2C%22start_url%22%3A%22.%22%7D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&family=Oswald:wght@400;600;700&display=swap">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&family=Oswald:wght@400;600;700&display=swap');
+/* Emoji font fallback fix for Android */
+@font-face {
+  font-family: 'EmojiFixed';
+  src: local('Noto Color Emoji'), local('Apple Color Emoji'), local('Segoe UI Emoji'), local('Android Emoji');
+  unicode-range: U+1F000-1FFFF, U+2600-27BF, U+FE00-FE0F;
+}
+/* Cinzel fallback if Google Fonts fail to load */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 400 900;
+  src: local('Georgia'), local('Times New Roman');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Cinzel Decorative';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Georgia'), local('Times New Roman');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400 700;
+  src: local('Arial Narrow'), local('Arial'), local('sans-serif');
+  font-display: swap;
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   --gold:#f5c842;--gold-dark:#a07818;--gold-bright:#ffe870;
@@ -904,6 +940,9 @@ body.landscape .side-ctrl-panel.right-c{border-left:2px solid var(--gold-dark);}
   <div class="rotate-sub">Игра доступна только в горизонтальном режиме</div>
 </div>
 
+<!-- FULLSCREEN BUTTON -->
+<button id="fsBtn" onclick="goFullscreen()" style="position:fixed;bottom:14px;right:14px;z-index:999;width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#44cc44,#22aa22 40%,#116611 80%,#044404 100%);border:2px solid #33aa33;color:#044404;font-size:18px;cursor:pointer;box-shadow:0 0 14px rgba(40,200,40,0.5),0 3px 8px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;transition:opacity 0.3s;" title="На весь экран">⛶</button>
+
 <!-- PAYTABLE -->
 <div class="paytable-overlay" id="paytableOverlay">
   <div class="paytable-box">
@@ -916,15 +955,15 @@ body.landscape .side-ctrl-panel.right-c{border-left:2px solid var(--gold-dark);}
 <script>
 // ===== SYMBOLS =====
 const SYMBOLS = [
-  { id:'gnome',    e:'🧙', label:'ГНОМ (wild)',   mult:5000, weight:1,  wild:true  },
-  { id:'lantern',  e:'🪔', label:'ФОНАРЬ',        mult:2000, weight:2              },
-  { id:'pickaxe',  e:'⛏️', label:'КИРКА',         mult:500,  weight:4              },
-  { id:'anvil',    e:'⚒️', label:'НАКОВАЛЬНЯ',    mult:200,  weight:6              },
-  { id:'hammer',   e:'🔨', label:'МОЛОТ',         mult:100,  weight:8              },
-  { id:'umbrella', e:'☂️', label:'ЗОНТ',          mult:80,   weight:10             },
-  { id:'treasure', e:'💎', label:'БРИЛЛИАНТ',     mult:60,   weight:12             },
-  { id:'bag',      e:'🎒', label:'МЕШОК',         mult:40,   weight:14             },
-  { id:'cart',     e:'🚂', label:'ВАГОНЕТКА(бонус)',mult:0,  weight:8, bonus:true  },
+  { id:'gnome',    e:'🧙‍♂️', label:'ГНОМ (wild)',   mult:5000, weight:1,  wild:true  },
+  { id:'lantern',  e:'🪔',  label:'ФОНАРЬ',        mult:2000, weight:2              },
+  { id:'pickaxe',  e:'⛏️',  label:'КИРКА',         mult:500,  weight:4              },
+  { id:'anvil',    e:'⚒️',  label:'НАКОВАЛЬНЯ',    mult:200,  weight:6              },
+  { id:'hammer',   e:'🔨',  label:'МОЛОТ',         mult:100,  weight:8              },
+  { id:'umbrella', e:'☂️',  label:'ЗОНТ',          mult:80,   weight:10             },
+  { id:'treasure', e:'💎',  label:'БРИЛЛИАНТ',     mult:60,   weight:12             },
+  { id:'bag',      e:'🎒',  label:'МЕШОК',         mult:40,   weight:14             },
+  { id:'cart',     e:'🚂',  label:'ВАГОНЕТКА(бонус)',mult:0,  weight:8, bonus:true  },
   { id:'ten',      e:'10', label:'10',             mult:15,   weight:20, font:true  },
   { id:'jack',     e:'J',  label:'J',              mult:10,   weight:22, font:true  },
   { id:'queen',    e:'Q',  label:'Q',              mult:8,    weight:24, font:true  },
@@ -1021,13 +1060,13 @@ function makeSymHTML(id,size){
   const s=SYM_STYLE[id]||{bg:'#333',border:'#555',tc:'#fff'};
   const sym=getSym(id);
   const isFont=sym?.font||['ten','jack','queen','king','ace'].includes(id);
-  const fs=isFont?Math.floor(size*0.40):Math.floor(size*0.46);
+  const fs=isFont?Math.floor(size*0.40):Math.floor(size*0.60);
   return `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;
     background:${s.bg};border:2px solid ${s.border};border-radius:5px;
-    font-size:${fs}px;color:${s.tc};font-family:${isFont?"'Cinzel',serif":'inherit'};
+    font-size:${fs}px;color:${s.tc};font-family:${isFont?"'Cinzel',Georgia,serif":'Noto Color Emoji,Apple Color Emoji,Segoe UI Emoji,Android Emoji,system-ui,-apple-system,sans-serif'};
     font-weight:700;text-shadow:${isFont?`0 0 10px ${s.border},1px 1px 0 rgba(0,0,0,0.5)`:'none'};
     box-shadow:inset 0 2px 0 rgba(255,255,255,0.15),inset 0 -2px 0 rgba(0,0,0,0.3);flex-shrink:0;">
-    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:1;transform:translateY(-2%);">${sym?.e||'?'}</span></div>`;
+    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;line-height:1;transform:translateY(-2%);font-style:normal;font-variant-emoji:emoji;">${sym?.e||'?'}</span></div>`;
 }
 
 // ===== BUILD REELS =====
@@ -1108,76 +1147,104 @@ function changeLines(d){linesIdx=Math.max(0,Math.min(LINE_OPTS.length-1,linesIdx
 // ===== SPIN =====
 async function spin(){
   // If spinning — stop all reels instantly
-  if(spinning){
-    stopNow=true;
+  if (spinning) {
+    stopNow = true;
     return;
   }
-  const bet=BET_OPTS[betIdx],lns=LINE_OPTS[linesIdx];
-  const totalBet=bet*lns;
-  if(balance<totalBet){showMsg('НЕДОСТАТОЧНО КРЕДИТОВ');return;}
+  const bet = BET_OPTS[betIdx], lns = LINE_OPTS[linesIdx];
+  const totalBet = bet * lns;
+  if (balance < totalBet) {
+    showMsg('НЕДОСТАТОЧНО КРЕДИТОВ');
+    return;
+  }
 
-  spinning=true;stopNow=false;lastWin=0;balance-=totalBet;
-  updateHUD();clearWinOverlay();
-  document.querySelectorAll('.symbol.win-highlight').forEach(e=>e.classList.remove('win-highlight'));
+  spinning = true; stopNow = false; lastWin = 0;
+  updateHUD(); clearWinOverlay();
+  document.querySelectorAll('.symbol.win-highlight').forEach(e => e.classList.remove('win-highlight'));
   clearPaylineCanvas();
 
-  ['spinBtn','spinBtnSide'].forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=false;e.textContent='СТОП';}});
+  ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = false; e.textContent = 'СТОП'; } });
 
-  const size=getSymSize();
-  for(let c=0;c<REELS;c++){document.getElementById(`reel-${c}`)?.classList.add('spinning');beep(180+c*35,0.14,'sawtooth',0.05);}
+  const size = getSymSize();
+  for (let c = 0; c < REELS; c++) { document.getElementById(`reel-${c}`)?.classList.add('spinning'); beep(180 + c * 35, 0.14, 'sawtooth', 0.05); }
 
-  const newGrid=[];
-  for(let c=0;c<REELS;c++){newGrid[c]=[];for(let r=0;r<ROWS;r++) newGrid[c][r]=rnd(POOL);}
-  pendingGrid=newGrid;
-
-  for(let c=0;c<REELS;c++){
-    if(stopNow){
-      // Stop all remaining reels instantly
-      for(let cc=c;cc<REELS;cc++) stopReel(cc,newGrid[cc],size);
-      break;
+  // --- Новый код: запрос к серверу ---
+  let spinResult = null;
+  try {
+    const resp = await fetch('/api/slot/spin', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account: selectedAccount,
+        bet_per_line: bet,
+        lines: lns
+      })
+    });
+    spinResult = await resp.json();
+    if (!resp.ok || !spinResult.ok) {
+      showMsg(spinResult.error || 'Ошибка спина');
+      spinning = false;
+      ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = false; e.textContent = 'SPIN'; } });
+      return;
     }
-    await delay(280+c*220);
-    if(stopNow){
-      for(let cc=c;cc<REELS;cc++) stopReel(cc,newGrid[cc],size);
-      break;
-    }
-    stopReel(c,newGrid[c],size);
-    beep(280+c*55,0.1,'square',0.06);
-  }
-
-  // Ensure all spinning classes removed
-  for(let c=0;c<REELS;c++) document.getElementById(`reel-${c}`)?.classList.remove('spinning');
-
-  await delay(stopNow?0:200);grid=newGrid;stopNow=false;
-
-  ['spinBtn','spinBtnSide'].forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=true;e.textContent='SPIN';}});
-
-  // Check bonus (3+ cart symbols anywhere)
-  let cartCount=0;
-  for(let c=0;c<REELS;c++) for(let r=0;r<ROWS;r++) if(grid[c][r]==='cart') cartCount++;
-  if(cartCount>=3){
-    bonusCount=cartCount;
-    document.getElementById('bonusInfo').style.display='flex';
-    document.getElementById('bonusCount').textContent=cartCount;
-    await delay(500);
-    openBonus(bet,lns);
-    spinning=false;
-    ['spinBtn','spinBtnSide'].forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=false;e.textContent='SPIN';}});
+  } catch (e) {
+    showMsg('Ошибка соединения');
+    spinning = false;
+    ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = false; e.textContent = 'SPIN'; } });
     return;
-  }else{
-    document.getElementById('bonusInfo').style.display='none';
   }
 
-  const{totalWin,winLines}=evaluate(lns,bet);
-  if(totalWin>0){
-    balance+=totalWin;lastWin=totalWin;updateHUD();
-    highlightWins(winLines,size);await delay(400);
-    showWinOverlay(totalWin,winLines);confetti();
-    beep(523,0.08);beep(659,0.08);beep(784,0.18);
-  }else updateHUD();
+  // --- Анимация спинов (оставляем для UX) ---
+  const newGrid = spinResult.grid;
+  pendingGrid = newGrid;
+  for (let c = 0; c < REELS; c++) {
+    if (stopNow) {
+      for (let cc = c; cc < REELS; cc++) stopReel(cc, newGrid[cc], size);
+      break;
+    }
+    await delay(280 + c * 220);
+    if (stopNow) {
+      for (let cc = c; cc < REELS; cc++) stopReel(cc, newGrid[cc], size);
+      break;
+    }
+    stopReel(c, newGrid[c], size);
+    beep(280 + c * 55, 0.1, 'square', 0.06);
+  }
+  for (let c = 0; c < REELS; c++) document.getElementById(`reel-${c}`)?.classList.remove('spinning');
+  await delay(stopNow ? 0 : 200); grid = newGrid; stopNow = false;
 
-  ['spinBtn','spinBtnSide'].forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=false;e.textContent='SPIN';}});
-  spinning=false;
+  ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = true; e.textContent = 'SPIN'; } });
+
+  // --- Обработка бонуса ---
+  let cartCount = 0;
+  for (let c = 0; c < REELS; c++) for (let r = 0; r < ROWS; r++) if (grid[c][r] === 'cart') cartCount++;
+  if (cartCount >= 3) {
+    bonusCount = cartCount;
+    document.getElementById('bonusInfo').style.display = 'flex';
+    document.getElementById('bonusCount').textContent = cartCount;
+    await delay(500);
+    openBonus(bet, lns);
+    spinning = false;
+    ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = false; e.textContent = 'SPIN'; } });
+    return;
+  } else {
+    document.getElementById('bonusInfo').style.display = 'none';
+  }
+
+  // --- Обновление баланса и отображение выигрыша ---
+  balance = spinResult.balances[selectedAccount];
+  dbBalances.main = spinResult.balances.main;
+  dbBalances.bonus = spinResult.balances.bonus;
+  lastWin = spinResult.win;
+  updateHUD();
+  if (spinResult.win > 0) {
+    highlightWins(spinResult.win_lines, size); await delay(400);
+    showWinOverlay(spinResult.win, spinResult.win_lines); confetti();
+    beep(523, 0.08); beep(659, 0.08); beep(784, 0.18);
+  }
+  ['spinBtn', 'spinBtnSide'].forEach(id => { const e = document.getElementById(id); if (e) { e.disabled = false; e.textContent = 'SPIN'; } });
+  spinning = false;
 }
 
 function stopReel(c,newRow,sz){
@@ -1557,6 +1624,21 @@ applyLayout();buildPaytable();buildReels();buildLineNums();updateHUD();
 buildExitButton();
 buildAccountSwitch();
 syncBalanceFromServer();
+
+// ===== FULLSCREEN =====
+function goFullscreen(){
+  const el=document.documentElement;
+  const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(req){req.call(el).catch(()=>{});}
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('fsBtn');
+  if(!btn)return;
+  if(document.fullscreenElement){btn.textContent='✕';btn.onclick=()=>document.exitFullscreen&&document.exitFullscreen();}
+  else{btn.textContent='⛶';btn.onclick=goFullscreen;}
+});
+// Auto-enable fullscreen on load
+goFullscreen();
 </script>
 </body>
 </html>

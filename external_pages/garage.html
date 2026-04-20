@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Garage Slots</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Garage">
+<meta name="theme-color" content="#3d1f00">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22Garage%22%2C%22short_name%22%3A%22Garage%22%2C%22display%22%3A%22fullscreen%22%2C%22orientation%22%3A%22landscape%22%2C%22background_color%22%3A%22%233d1f00%22%2C%22theme_color%22%3A%22%233d1f00%22%2C%22start_url%22%3A%22.%22%7D">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Russo+One&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --wood-dark: #3d1f00;
+    --wood-mid: #5a2e00;
+    --wood-light: #7a4010;
+    --wood-grain: #8b5520;
+    --steel: #b0b8c0;
+    --steel-dark: #707880;
+    --garage-blue: #4a6fa5;
+    --garage-blue-light: #7aa0d0;
+    --rust: #8b3a00;
+    --yellow-line: #f0d000;
+    --red-line: #cc2200;
+    --green-line: #00aa44;
+    --cyan-line: #00cccc;
+    --pink-line: #cc44aa;
+    --blue-line: #2244cc;
+    --white-line: #dddddd;
+    --orange-line: #ff7700;
+    --btn-green: #228822;
+    --btn-red: #aa1111;
+    --display-bg: #1a1a0a;
+    --display-amber: #ffaa00;
+    --display-red: #ff3300;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #2a1200;
+    font-family: 'Oswald', sans-serif;
+    touch-action: manipulation;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== MACHINE ===== */
+  .machine {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: 
+      repeating-linear-gradient(90deg, transparent 0px, transparent 28px, rgba(100,50,0,0.15) 28px, rgba(100,50,0,0.15) 29px),
+      repeating-linear-gradient(0deg, transparent 0px, transparent 28px, rgba(100,50,0,0.12) 28px, rgba(100,50,0,0.12) 29px),
+      linear-gradient(180deg, #3d2000 0%, #2a1400 50%, #1a0a00 100%);
+    overflow: hidden;
+  }
+
+  /* Wood side panels */
+  .wood-side {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: clamp(28px, 5vw, 50px);
+    background: repeating-linear-gradient(
+      180deg,
+      #5a2e00 0px, #4a2400 8px, #6a3800 16px, #3d1f00 24px, #7a4010 32px, #5a2e00 40px
+    );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    z-index: 10;
+    border: 2px solid #2a1200;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+  .wood-side.left { left: 0; border-right: 3px solid #1a0a00; }
+  .wood-side.right { right: 0; border-left: 3px solid #1a0a00; }
+
+  .wood-letter {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(8px, 2vw, 14px);
+    color: #cc8844;
+    text-shadow: 1px 1px 2px #000, -1px -1px 1px rgba(255,180,80,0.3);
+    letter-spacing: 0;
+    line-height: 1.1;
+  }
+
+  /* ===== TITLE ===== */
+  .title-bar {
+    width: 100%;
+    background: linear-gradient(180deg, #5a3800 0%, #3d2200 60%, #2a1800 100%);
+    border-bottom: 3px solid #8b5520;
+    padding: clamp(4px, 1.5vh, 10px) 0 clamp(3px, 1vh, 8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  }
+  .title-text {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(24px, 7vw, 52px);
+    color: #f0c840;
+    text-shadow: 
+      2px 2px 0 #8b5000,
+      4px 4px 0 #5a3000,
+      0 0 30px rgba(240,200,60,0.5);
+    letter-spacing: 4px;
+  }
+  .title-bet-left, .title-bet-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: clamp(7px, 1.5vw, 11px);
+    color: #cc4444;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+  }
+  .title-bet-left { left: clamp(35px, 8vw, 80px); }
+  .title-bet-right { right: clamp(35px, 8vw, 80px); }
+  .title-bet-circle {
+    width: clamp(18px, 4vw, 28px);
+    height: clamp(18px, 4vw, 28px);
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff4444, #aa1111);
+    border: 2px solid #ffaaaa;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: clamp(9px, 2vw, 14px);
+    font-weight: 900;
+    box-shadow: 0 0 8px rgba(255,80,80,0.6);
+    margin-bottom: 3px;
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main-content {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  /* ===== LINE NUMBERS PANEL ===== */
+  .lines-panel {
+    width: clamp(28px, 5.5vw, 52px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(2px, 0.5vh, 5px);
+    padding: 4px 2px;
+    background: linear-gradient(180deg, #2a1600, #1a0d00);
+    border-right: 2px solid #5a3000;
+    z-index: 5;
+    flex-shrink: 0;
+  }
+  .lines-panel.right { border-right: none; border-left: 2px solid #5a3000; }
+
+  .line-num {
+    width: clamp(20px, 4vw, 32px);
+    height: clamp(20px, 4vw, 32px);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(9px, 2vw, 13px);
+    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1.5px solid transparent;
+    user-select: none;
+  }
+  .line-num.active {
+    border-color: currentColor;
+    text-shadow: 0 0 6px currentColor;
+    background: rgba(255,255,255,0.08);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+  }
+  .line-num.inactive { opacity: 0.3; }
+
+  /* Line colors matching the image */
+  .ln-1  { color: var(--red-line); }
+  .ln-2  { color: var(--yellow-line); }
+  .ln-3  { color: var(--blue-line); }
+  .ln-4  { color: var(--green-line); }
+  .ln-5  { color: var(--pink-line); }
+  .ln-6  { color: var(--cyan-line); }
+  .ln-7  { color: var(--orange-line); }
+  .ln-8  { color: var(--white-line); }
+  .ln-9  { color: #aa44ff; }
+
+  /* ===== REELS AREA ===== */
+  .reels-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(4px, 1vh, 10px) 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .reels-frame {
+    position: relative;
+    background: #3a5070;
+    border: 3px solid #607090;
+    border-radius: 4px;
+    box-shadow: 
+      0 0 0 2px #2a3a50,
+      0 0 30px rgba(0,0,0,0.8),
+      inset 0 0 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  /* Steel grid overlay */
+  .reels-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent calc(100% / 5)),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent calc(100% / 3));
+    pointer-events: none;
+    z-index: 8;
+  }
+
+  .reels-inner {
+    display: flex;
+    gap: 2px;
+    position: relative;
+  }
+
+  /* ===== REEL ===== */
+  .reel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #4a6888 0%, #5a7898 50%, #4a6888 100%);
+    overflow: hidden;
+    position: relative;
+  }
+  .reel.spinning .reel-strip {
+    animation: reelBlur 0.12s linear infinite;
+  }
+  @keyframes reelBlur {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-33.33%); }
+  }
+
+  .reel-strip {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+  }
+
+  /* ===== SYMBOL ===== */
+  .symbol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, #b8ccdc 0%, #a0b8cc 40%, #90a8bc 100%);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-bottom-color: rgba(0,0,0,0.3);
+    border-right-color: rgba(0,0,0,0.2);
+    position: relative;
+    cursor: default;
+    transition: filter 0.1s;
+  }
+  .symbol-inner {
+    width: 90%;
+    height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55em;
+    line-height: 1;
+  }
+
+  /* Win highlight */
+  .symbol.win-highlight {
+    animation: winFlash 0.4s ease-in-out infinite alternate;
+    z-index: 5;
+  }
+  @keyframes winFlash {
+    from { filter: brightness(1); }
+    to { filter: brightness(2) saturate(1.5) drop-shadow(0 0 10px #ffdd00); }
+  }
+
+  /* Payline canvas */
+  #paylineCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 15;
+  }
+
+  /* ===== BOTTOM DECORATION ===== */
+  .bottom-deco {
+    width: 100%;
+    max-width: 700px;
+    height: clamp(40px, 10vh, 80px);
+    background: linear-gradient(180deg, #3a5070 0%, #2a3a50 100%);
+    border: 3px solid #607090;
+    border-top: none;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 8px 12px;
+    flex-shrink: 0;
+  }
+
+  .credit-display {
+    background: var(--display-bg);
+    border: 2px solid #444;
+    border-radius: 4px;
+    padding: 4px 12px;
+    text-align: center;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  }
+  .credit-label {
+    color: var(--display-amber);
+    font-size: clamp(8px, 1.5vw, 11px);
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  .credit-value {
+    color: var(--display-red);
+    font-size: clamp(16px, 3.5vw, 26px);
+    font-family: 'Russo One', sans-serif;
+    text-shadow: 0 0 8px rgba(255,50,0,0.6);
+    letter-spacing: 2px;
+    line-height: 1.1;
+  }
+
+  /* ===== CONTROLS BOTTOM ===== */
+  .controls-bar {
+    width: 100%;
+    background: linear-gradient(180deg, #2a1800 0%, #1a1000 100%);
+    border-top: 3px solid #5a3800;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: clamp(4px, 1vh, 10px) clamp(6px, 2vw, 20px);
+    gap: clamp(4px, 1.5vw, 12px);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .ctrl-section-label {
+    color: #cc8844;
+    font-size: clamp(8px, 1.5vw, 11px);
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* HUD displays */
+  .hud-box {
+    background: var(--display-bg);
+    border: 2px solid #555533;
+    border-radius: 3px;
+    padding: 3px 8px;
+    min-width: clamp(50px, 10vw, 80px);
+    text-align: center;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.9);
+  }
+  .hud-label {
+    color: #999966;
+    font-size: clamp(7px, 1.3vw, 10px);
+    letter-spacing: 1px;
+  }
+  .hud-value {
+    color: var(--display-amber);
+    font-size: clamp(13px, 2.8vw, 20px);
+    font-family: 'Russo One', sans-serif;
+    text-shadow: 0 0 6px rgba(255,170,0,0.6);
+    letter-spacing: 1px;
+  }
+
+  /* Buttons */
+  .ctrl-btn-group {
+    display: flex;
+    align-items: center;
+    gap: clamp(3px, 0.8vw, 8px);
+  }
+  .arrow-btn {
+    width: clamp(26px, 5vw, 38px);
+    height: clamp(26px, 5vw, 38px);
+    border-radius: 4px;
+    border: 2px solid #888;
+    background: linear-gradient(180deg, #888 0%, #555 50%, #333 100%);
+    color: white;
+    font-size: clamp(11px, 2.2vw, 16px);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .arrow-btn:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+  .max-btn {
+    padding: clamp(4px, 0.8vh, 7px) clamp(6px, 1.5vw, 12px);
+    border-radius: 4px;
+    border: 2px solid #aa7722;
+    background: linear-gradient(180deg, #cc8800 0%, #886600 50%, #664400 100%);
+    color: #ffee88;
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(9px, 1.8vw, 13px);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    transition: all 0.1s;
+    letter-spacing: 0.5px;
+  }
+  .max-btn:active { transform: translateY(1px); }
+
+  /* SPIN button */
+  .spin-btn {
+    width: clamp(60px, 13vw, 100px);
+    height: clamp(60px, 13vw, 100px);
+    border-radius: 50%;
+    border: 4px solid #44aa44;
+    background: radial-gradient(circle at 40% 35%, #88ee88, #228822 60%, #115511);
+    color: white;
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(10px, 2.2vw, 16px);
+    cursor: pointer;
+    box-shadow: 
+      0 0 20px rgba(80,220,80,0.5),
+      0 4px 10px rgba(0,0,0,0.6),
+      inset 0 2px 0 rgba(255,255,255,0.3);
+    transition: all 0.1s;
+    letter-spacing: 1px;
+    animation: spinGlow 2s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+  }
+  @keyframes spinGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(80,220,80,0.4), 0 4px 10px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.3); }
+    50% { box-shadow: 0 0 35px rgba(80,255,80,0.8), 0 4px 10px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.3); }
+  }
+  .spin-btn:active { transform: scale(0.95); }
+  .spin-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+
+  /* Info btn */
+  .info-btn {
+    padding: clamp(4px, 0.8vh, 7px) clamp(6px, 1.5vw, 12px);
+    border-radius: 4px;
+    border: 2px solid #aa3322;
+    background: linear-gradient(180deg, #cc4422 0%, #882211 50%, #551100 100%);
+    color: #ffccaa;
+    font-family: 'Oswald', sans-serif;
+    font-size: clamp(9px, 1.8vw, 13px);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    transition: all 0.1s;
+  }
+  .info-btn:active { transform: translateY(1px); }
+
+  /* ===== WIN DISPLAY ===== */
+  .win-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 30;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .win-overlay.show { opacity: 1; pointer-events: auto; }
+  .win-box {
+    background: linear-gradient(135deg, rgba(10,5,0,0.97), rgba(25,12,0,0.97));
+    border: 3px solid var(--yellow-line);
+    border-radius: 12px;
+    padding: clamp(12px, 3vw, 24px) clamp(20px, 5vw, 48px);
+    text-align: center;
+    box-shadow: 0 0 50px rgba(255,200,0,0.5);
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); }
+    70% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .win-title {
+    color: var(--yellow-line);
+    font-size: clamp(16px, 4vw, 28px);
+    font-family: 'Russo One', sans-serif;
+    letter-spacing: 3px;
+    text-shadow: 0 0 15px rgba(240,200,0,0.8);
+  }
+  .win-amount {
+    color: white;
+    font-size: clamp(28px, 7vw, 50px);
+    font-family: 'Russo One', sans-serif;
+    text-shadow: 0 0 20px rgba(255,255,255,0.7);
+  }
+  .win-lines-info {
+    color: #cc9944;
+    font-size: clamp(10px, 2vw, 14px);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* ===== PAYTABLE ===== */
+  .paytable-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .paytable-overlay.show { opacity: 1; pointer-events: auto; }
+  .paytable-box {
+    background: linear-gradient(135deg, #1a0e00, #0d0700);
+    border: 2px solid #cc9900;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 340px; width: 92%;
+    max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 0 50px rgba(180,120,0,0.5);
+  }
+  .paytable-title {
+    color: #f0c840;
+    font-size: 18px;
+    font-family: 'Russo One', sans-serif;
+    text-align: center;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+  }
+  .pt-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(150,100,0,0.2);
+    font-size: 12px;
+  }
+  .pt-sym { font-size: 20px; }
+  .pt-name { color: #cc9944; font-weight: 600; flex: 1; padding: 0 8px; }
+  .pt-pays { color: #f0c840; font-family: 'Russo One', sans-serif; font-size: 11px; }
+  .close-btn {
+    width: 100%; margin-top: 14px; padding: 10px;
+    background: linear-gradient(135deg, #7a4400, #4a2800);
+    border: 1px solid rgba(180,120,0,0.5);
+    border-radius: 6px;
+    color: #f0c840; font-family: 'Russo One', sans-serif;
+    font-size: 14px; cursor: pointer; letter-spacing: 1px;
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed; width: 8px; height: 8px;
+    border-radius: 2px; z-index: 50;
+    pointer-events: none;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== PORTRAIT ROTATE OVERLAY ===== */
+  #rotateOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 9999;
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #3d1f00, #1a0a00);
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: clamp(16px, 4vh, 32px);
+  }
+  @media (orientation: portrait) {
+    #rotateOverlay { display: flex; }
+  }
+  .rotate-icon {
+    font-size: clamp(64px, 18vw, 120px);
+    animation: rotateAnim 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 24px rgba(255,170,68,0.5));
+  }
+  @keyframes rotateAnim {
+    0%, 30% { transform: rotate(0deg); }
+    55%, 85% { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
+  }
+  .rotate-text {
+    color: #ffaa44;
+    font-size: clamp(18px, 5vw, 28px);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .rotate-sub {
+    color: #cc8844;
+    font-size: clamp(12px, 3vw, 16px);
+  }
+
+  /* ===== LANDSCAPE ===== */
+  body.landscape .machine { flex-direction: row; }
+  body.landscape .title-bar,
+  body.landscape .controls-bar { display: none !important; }
+  body.landscape .wood-side { display: none; }
+
+  body.landscape .main-content { flex: 1; align-items: stretch; }
+  body.landscape .reels-area { padding: 4px; }
+
+  body.landscape .side-ctrl-panel {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: clamp(90px, 14vw, 120px);
+    min-width: 80px;
+    flex-shrink: 0;
+    padding: 8px 6px;
+    background: linear-gradient(180deg, #2a1800 0%, #1a1000 100%);
+    border-color: #5a3800;
+    z-index: 5;
+  }
+  body.landscape .side-ctrl-panel.left-ctrl { border-right: 2px solid #5a3800; }
+  body.landscape .side-ctrl-panel.right-ctrl { border-left: 2px solid #5a3800; }
+
+  body.landscape .side-hud {
+    background: var(--display-bg);
+    border: 1.5px solid #555533;
+    border-radius: 3px;
+    padding: 3px 6px;
+    width: 100%;
+    text-align: center;
+  }
+  body.landscape .side-hud .hud-label {
+    color: #999966; font-size: 9px; letter-spacing: 0.8px;
+  }
+  body.landscape .side-hud .hud-value {
+    color: var(--display-amber);
+    font-family: 'Russo One', sans-serif;
+    font-size: 16px;
+    text-shadow: 0 0 6px rgba(255,170,0,0.6);
+  }
+
+  body.landscape .side-label {
+    color: #cc8844; font-size: 9px; letter-spacing: 1px; font-weight: 700;
+  }
+  body.landscape .side-ctrl-row {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  body.landscape .side-arr-btn {
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 2px solid #888;
+    background: linear-gradient(180deg, #888, #555 50%, #333);
+    color: white; font-size: 14px; font-weight: 900; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+  }
+  body.landscape .side-arr-btn:active { transform: translateY(1px); }
+  body.landscape .side-value-box {
+    background: var(--display-bg);
+    border: 2px solid #555533;
+    border-radius: 3px;
+    color: var(--display-amber);
+    font-family: 'Russo One', sans-serif;
+    font-size: 20px;
+    min-width: 46px;
+    text-align: center;
+    padding: 2px 6px;
+    text-shadow: 0 0 6px rgba(255,170,0,0.5);
+  }
+  body.landscape .side-max-btn {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1.5px solid #aa7722;
+    background: linear-gradient(180deg, #cc8800, #886600 50%, #664400);
+    color: #ffee88; font-family: 'Oswald', sans-serif;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    transition: all 0.1s;
+  }
+  body.landscape .side-spin-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    border: 3px solid #44aa44;
+    background: radial-gradient(circle at 40% 35%, #88ee88, #228822 60%, #115511);
+    color: white; font-family: 'Russo One', sans-serif; font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 0 20px rgba(80,220,80,0.5), 0 4px 10px rgba(0,0,0,0.6);
+    animation: spinGlow 2s ease-in-out infinite;
+    transition: all 0.1s;
+  }
+  body.landscape .side-spin-btn:active { transform: scale(0.95); }
+  body.landscape .side-spin-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+  body.landscape .side-info-btn {
+    padding: 5px 10px; border-radius: 4px;
+    border: 1.5px solid #aa3322;
+    background: linear-gradient(180deg, #cc4422, #882211 50%, #551100);
+    color: #ffccaa; font-family: 'Oswald', sans-serif;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  /* Portrait defaults: side panels hidden */
+  .side-ctrl-panel { display: none; }
+
+  body.portrait .lines-panel { display: flex; }
+  body.landscape .lines-panel { display: flex; }
+
+  /* Responsive small portrait */
+  @media (max-height: 600px) and (orientation: portrait) {
+    .bottom-deco { height: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="machine" id="machine">
+
+  <!-- WOOD SIDES (portrait) -->
+  <div class="wood-side left">
+    <span class="wood-letter">G</span><span class="wood-letter">A</span>
+    <span class="wood-letter">R</span><span class="wood-letter">A</span>
+    <span class="wood-letter">G</span><span class="wood-letter">E</span>
+  </div>
+  <div class="wood-side right">
+    <span class="wood-letter">G</span><span class="wood-letter">A</span>
+    <span class="wood-letter">R</span><span class="wood-letter">A</span>
+    <span class="wood-letter">G</span><span class="wood-letter">E</span>
+  </div>
+
+  <!-- TITLE -->
+  <div class="title-bar">
+    <div class="title-bet-left">
+      <div class="title-bet-circle">1</div>
+      <div style="font-size:clamp(6px,1.2vw,9px);line-height:1.1;text-align:center">СТАВКА<br>ПО ЛИНИИ</div>
+    </div>
+    <span class="title-text">GARAGE</span>
+    <div class="title-bet-right">
+      <div class="title-bet-circle">1</div>
+      <div style="font-size:clamp(6px,1.2vw,9px);line-height:1.1;text-align:center">СТАВКА<br>ПО ЛИНИИ</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- LEFT CTRL PANEL (landscape) -->
+    <div class="side-ctrl-panel left-ctrl" id="sideCtrlLeft">
+      <div class="side-hud">
+        <div class="hud-label">БАЛАНС</div>
+        <div class="hud-value" id="balanceSide">1800</div>
+      </div>
+      <div class="side-hud">
+        <div class="hud-label">ВЫИГРЫШ</div>
+        <div class="hud-value" id="winSide">0</div>
+      </div>
+      <div class="side-label">СТАВКА</div>
+      <div class="side-ctrl-row">
+        <button class="side-arr-btn" onclick="changeBet(1)">▲</button>
+        <div class="side-value-box" id="betSide">1</div>
+        <button class="side-arr-btn" onclick="changeBet(-1)">▼</button>
+      </div>
+      <button class="side-max-btn" onclick="setMaxBet()">MAX</button>
+      <button class="side-info-btn" onclick="togglePaytable()">📋 INFO</button>
+    </div>
+
+    <!-- LEFT LINES PANEL -->
+    <div class="lines-panel left" id="linesPanelLeft"></div>
+
+    <!-- REELS AREA -->
+    <div class="reels-area">
+      <div class="reels-frame" id="reelsFrame">
+        <div class="reels-inner" id="reelsInner"></div>
+        <svg id="paylineCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="bottom-deco" id="bottomDeco">
+        <div class="credit-display">
+          <div class="credit-label">ИГРА ОТ 1 ДО</div>
+          <div class="credit-value"><span id="creditDisplay">1800</span> КРЕДИТОВ</div>
+        </div>
+      </div>
+      <!-- Win overlay -->
+      <div class="win-overlay" id="winOverlay">
+        <div class="win-box">
+          <div class="win-title">🏆 ВЫИГРЫШ!</div>
+          <div class="win-amount" id="winAmount">0</div>
+          <div class="win-lines-info" id="winLinesInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT LINES PANEL -->
+    <div class="lines-panel right" id="linesPanelRight"></div>
+
+    <!-- RIGHT CTRL PANEL (landscape) -->
+    <div class="side-ctrl-panel right-ctrl" id="sideCtrlRight">
+      <div class="side-label">ЛИНИИ</div>
+      <div class="side-ctrl-row">
+        <button class="side-arr-btn" onclick="changeLines(1)">▲</button>
+        <div class="side-value-box" id="linesSide">9</div>
+        <button class="side-arr-btn" onclick="changeLines(-1)">▼</button>
+      </div>
+      <button class="side-spin-btn" id="spinBtnSide" onclick="spin()">SPIN</button>
+      <button class="side-info-btn" onclick="toggleSound()" id="soundBtnSide">🔊</button>
+    </div>
+
+  </div><!-- main-content -->
+
+  <!-- CONTROLS BAR (portrait) -->
+  <div class="controls-bar">
+    <div class="ctrl-section">
+      <div class="ctrl-section-label">БАЛАНС</div>
+      <div class="hud-box">
+        <div class="hud-value" id="balanceDisplay">1800</div>
+      </div>
+    </div>
+    <div class="ctrl-section">
+      <div class="ctrl-section-label">СТАВКА</div>
+      <div class="ctrl-btn-group">
+        <button class="arrow-btn" onclick="changeBet(-1)">◀</button>
+        <div class="hud-box"><div class="hud-value" id="betDisplay">1</div></div>
+        <button class="arrow-btn" onclick="changeBet(1)">▶</button>
+      </div>
+      <button class="max-btn" onclick="setMaxBet()">MAX BET</button>
+    </div>
+    <div class="ctrl-section">
+      <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
+    </div>
+    <div class="ctrl-section">
+      <div class="ctrl-section-label">ЛИНИИ</div>
+      <div class="ctrl-btn-group">
+        <button class="arrow-btn" onclick="changeLines(-1)">◀</button>
+        <div class="hud-box"><div class="hud-value" id="linesDisplay">9</div></div>
+        <button class="arrow-btn" onclick="changeLines(1)">▶</button>
+      </div>
+    </div>
+    <div class="ctrl-section">
+      <button class="info-btn" onclick="togglePaytable()">📋 INFO</button>
+      <button class="info-btn" onclick="toggleSound()" id="soundBtn" style="margin-top:3px">🔊</button>
+    </div>
+  </div>
+
+</div><!-- machine -->
+
+<!-- FULLSCREEN BUTTON -->
+<button id="fsBtn" onclick="goFullscreen()" style="position:fixed;bottom:14px;right:14px;z-index:999;width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#ffaa44,#cc8800 40%,#884400 80%,#442200 100%);border:2px solid #aa6600;color:#221100;font-size:18px;cursor:pointer;box-shadow:0 0 14px rgba(200,100,0,0.5),0 3px 8px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;transition:opacity 0.3s;" title="На весь экран">⛶</button>
+
+<!-- PORTRAIT ROTATE OVERLAY -->
+<div id="rotateOverlay">
+  <div class="rotate-icon">📱</div>
+  <div class="rotate-text">РАЗВЕРНИТЕ ЭКРАН</div>
+  <div class="rotate-sub">Игра доступна только в горизонтальном режиме</div>
+</div>
+
+<!-- PAYTABLE -->
+<div class="paytable-overlay" id="paytableOverlay">
+  <div class="paytable-box">
+    <div class="paytable-title">📋 ТАБЛИЦА ВЫПЛАТ</div>
+    <div id="paytableRows"></div>
+    <button class="close-btn" onclick="togglePaytable()">ЗАКРЫТЬ</button>
+  </div>
+</div>
+
+<script>
+// ===== SYMBOLS =====
+const SYMBOLS = [
+  { id: 'garage',   emoji: '🏁', label: 'GARAGE',    mult: 5000, weight: 1 },
+  { id: 'car',      emoji: '🚗', label: 'АВТОМОБИЛЬ', mult: 1000, weight: 3 },
+  { id: 'key',      emoji: '🔑', label: 'КЛЮЧИ',      mult: 200,  weight: 5 },
+  { id: 'battery',  emoji: '🔋', label: 'АККУМУЛЯТОР',mult: 150,  weight: 6 },
+  { id: 'fire_ext', emoji: '🧯', label: 'ОГНЕТУШИТЕЛЬ',mult: 100, weight: 8 },
+  { id: 'oil',      emoji: '🛢️', label: 'МАСЛО',      mult: 80,   weight: 10 },
+  { id: 'lock',     emoji: '🔒', label: 'ЗАМОК',       mult: 60,   weight: 12 },
+  { id: 'spark',    emoji: '⚡', label: 'СВЕЧИ',       mult: 40,   weight: 14 },
+  { id: 'jack',     emoji: '🔧', label: 'ДОМКРАТ',     mult: 30,   weight: 16 },
+  { id: 'ten',      emoji: '🔟', label: '10',          mult: 15,   weight: 18 },
+  { id: 'jack_c',   emoji: '🃏', label: 'J',           mult: 10,   weight: 20 },
+  { id: 'queen',    emoji: '👸', label: 'Q',           mult: 8,    weight: 22 },
+  { id: 'king',     emoji: '👑', label: 'K',           mult: 6,    weight: 24 },
+  { id: 'ace',      emoji: '🅰️', label: 'A',           mult: 5,    weight: 26 },
+];
+
+// Better symbol display
+const SYM_DISPLAY = {
+  garage:   { text: '🏁', bg: 'radial-gradient(circle, #cc4400, #661100)', border: '#ff6600' },
+  car:      { text: '🚗', bg: 'radial-gradient(circle, #334455, #1a2233)', border: '#4488cc' },
+  key:      { text: '🔑', bg: 'radial-gradient(circle, #887733, #443300)', border: '#ccaa44' },
+  battery:  { text: '🔋', bg: 'radial-gradient(circle, #224422, #112211)', border: '#44aa44' },
+  fire_ext: { text: '🧯', bg: 'radial-gradient(circle, #442211, #221100)', border: '#cc4422' },
+  oil:      { text: '🛢️', bg: 'radial-gradient(circle, #113366, #0a1a33)', border: '#3366bb' },
+  lock:     { text: '🔒', bg: 'radial-gradient(circle, #887733, #443300)', border: '#ddcc44' },
+  spark:    { text: '⚡', bg: 'radial-gradient(circle, #554400, #332200)', border: '#ffcc00' },
+  jack:     { text: '🔧', bg: 'radial-gradient(circle, #333333, #1a1a1a)', border: '#888888' },
+  ten:      { text: '10', bg: 'radial-gradient(circle, #224433, #112211)', border: '#44cc88', textColor: '#44ffaa', font: true },
+  jack_c:   { text: 'J',  bg: 'radial-gradient(circle, #1a2244, #0d1122)', border: '#4488ff', textColor: '#88aaff', font: true },
+  queen:    { text: 'Q',  bg: 'radial-gradient(circle, #331133, #1a0a1a)', border: '#cc44cc', textColor: '#ff88ff', font: true },
+  king:     { text: 'K',  bg: 'radial-gradient(circle, #3a2000, #1a1000)', border: '#cc8833', textColor: '#ffaa44', font: true },
+  ace:      { text: 'A',  bg: 'radial-gradient(circle, #2a2a1a, #141410)', border: '#aaaaaa', textColor: '#cccccc', font: true },
+};
+
+// Weighted pool
+const POOL = [];
+for (const s of SYMBOLS) {
+  for (let i = 0; i < s.weight; i++) POOL.push(s.id);
+}
+
+const REELS = 5;
+const ROWS  = 3;
+
+// Paylines (row patterns for 5 reels)
+const PAYLINES = [
+  { id:1, rows:[1,1,1,1,1], color:'#cc2200' },
+  { id:2, rows:[0,0,0,0,0], color:'#f0d000' },
+  { id:3, rows:[2,2,2,2,2], color:'#2244cc' },
+  { id:4, rows:[0,1,2,1,0], color:'#00aa44' },
+  { id:5, rows:[2,1,0,1,2], color:'#cc44aa' },
+  { id:6, rows:[0,0,1,0,0], color:'#00cccc' },
+  { id:7, rows:[2,2,1,2,2], color:'#ff7700' },
+  { id:8, rows:[1,0,0,0,1], color:'#dddddd' },
+  { id:9, rows:[1,2,2,2,1], color:'#aa44ff' },
+];
+
+const BET_OPTIONS   = [1, 2, 5, 10, 20, 50, 100];
+const LINES_OPTIONS = [1,2,3,4,5,6,7,8,9];
+
+let balance = 1800;
+let betIdx   = 0;
+let linesIdx = 8; // 9 lines
+let spinning = false;
+let lastWin  = 0;
+let grid     = []; // grid[col][row]
+let soundOn  = true;
+let selectedAccount = 'bonus';
+let dbBalances = {main: 0, bonus: 1000};
+
+// Audio
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudio() { if (!audioCtx) audioCtx = new AudioCtx(); return audioCtx; }
+function beep(freq, dur, type='square', vol=0.08) {
+  if (!soundOn) return;
+  try {
+    const ctx = getAudio();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = freq; o.type = type;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(); o.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+
+// ===== HELPERS =====
+function getRandSym() { return POOL[Math.floor(Math.random() * POOL.length)]; }
+function getSym(id) { return SYMBOLS.find(s => s.id === id); }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function isLandscape() { return window.innerWidth > window.innerHeight; }
+
+function applyLayout() {
+  const land = isLandscape();
+  document.body.classList.toggle('landscape', land);
+  document.body.classList.toggle('portrait', !land);
+}
+
+// ===== SYMBOL SIZE =====
+function getSymSize() {
+  if (isLandscape()) {
+    const panelW = document.getElementById('sideCtrlLeft').offsetWidth || 100;
+    const linesW = document.getElementById('linesPanelLeft').offsetWidth || 40;
+    const availW = window.innerWidth - panelW*2 - linesW*2 - 16 - 4*(REELS-1);
+    const availH = window.innerHeight - 16;
+    return Math.min(Math.floor(availW / REELS), Math.floor(availH / ROWS));
+  } else {
+    const woodW = document.querySelector('.wood-side')?.offsetWidth || 40;
+    const linesW = document.getElementById('linesPanelLeft').offsetWidth || 32;
+    const titleH = document.querySelector('.title-bar')?.offsetHeight || 50;
+    const ctrlH  = document.querySelector('.controls-bar')?.offsetHeight || 80;
+    const decoH  = document.getElementById('bottomDeco')?.offsetHeight || 50;
+    const availW = window.innerWidth - woodW*2 - linesW*2 - 8 - 4*(REELS-1);
+    const availH = window.innerHeight - titleH - ctrlH - decoH - 20;
+    return Math.min(Math.floor(availW / REELS), Math.floor(availH / ROWS));
+  }
+}
+
+// ===== MAKE SYMBOL HTML =====
+function makeSymHTML(id, size) {
+  const d = SYM_DISPLAY[id] || { text: '?', bg: '#333', border: '#555' };
+  const fontSize = d.font ? Math.floor(size * 0.38) : Math.floor(size * 0.52);
+  return `<div style="
+    width:${size}px; height:${size}px;
+    display:flex; align-items:center; justify-content:center;
+    background:${d.bg};
+    border:2px solid ${d.border};
+    border-radius:6px;
+    font-size:${fontSize}px;
+    color:${d.textColor || '#fff'};
+    font-family:${d.font ? "'Russo One',sans-serif" : 'inherit'};
+    font-weight:900;
+    text-shadow:${d.font ? `0 0 8px ${d.border}` : 'none'};
+    box-shadow:inset 0 2px 0 rgba(255,255,255,0.15), inset 0 -2px 0 rgba(0,0,0,0.3);
+    flex-shrink:0;
+  ">${d.text}</div>`;
+}
+
+// ===== BUILD REELS =====
+function buildReels() {
+  const size = getSymSize();
+  const inner = document.getElementById('reelsInner');
+  inner.innerHTML = '';
+  inner.style.height = (size * ROWS) + 'px';
+
+  // Init grid
+  grid = [];
+  for (let c = 0; c < REELS; c++) {
+    grid[c] = [];
+    for (let r = 0; r < ROWS; r++) grid[c][r] = getRandSym();
+  }
+
+  for (let c = 0; c < REELS; c++) {
+    const reel = document.createElement('div');
+    reel.className = 'reel';
+    reel.id = `reel-${c}`;
+    reel.style.width = size + 'px';
+    reel.style.height = size * ROWS + 'px';
+
+    const strip = document.createElement('div');
+    strip.className = 'reel-strip';
+    strip.id = `strip-${c}`;
+
+    for (let r = 0; r < ROWS; r++) {
+      const sym = document.createElement('div');
+      sym.className = 'symbol';
+      sym.id = `sym-${c}-${r}`;
+      sym.style.width = size + 'px';
+      sym.style.height = size + 'px';
+      sym.innerHTML = makeSymHTML(grid[c][r], size);
+      strip.appendChild(sym);
+    }
+
+    reel.appendChild(strip);
+    inner.appendChild(reel);
+  }
+
+  clearPaylineCanvas();
+}
+
+// ===== LINE NUMBERS =====
+const LINE_COLORS = ['ln-1','ln-2','ln-3','ln-4','ln-5','ln-6','ln-7','ln-8','ln-9'];
+
+function buildLineNums() {
+  const linesIdx_ = linesIdx; // current active
+  const activeCount = LINES_OPTIONS[linesIdx_];
+  ['linesPanelLeft','linesPanelRight'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+      const div = document.createElement('div');
+      div.className = `line-num ${LINE_COLORS[i]} ${i < activeCount ? 'active' : 'inactive'}`;
+      div.textContent = i + 1;
+      div.onclick = () => { linesIdx = LINES_OPTIONS.indexOf(i+1); updateHUD(); buildLineNums(); };
+      el.appendChild(div);
+    }
+  });
+}
+
+// ===== PAYTABLE =====
+function buildPaytable() {
+  const container = document.getElementById('paytableRows');
+  container.innerHTML = '';
+  for (const s of SYMBOLS) {
+    const d = SYM_DISPLAY[s.id];
+    const row = document.createElement('div');
+    row.className = 'pt-row';
+    row.innerHTML = `
+      <span class="pt-sym">${d.text}</span>
+      <span class="pt-name">${s.label}</span>
+      <span class="pt-pays">×${s.mult}</span>
+    `;
+    container.appendChild(row);
+  }
+}
+
+function togglePaytable() {
+  document.getElementById('paytableOverlay').classList.toggle('show');
+}
+document.getElementById('paytableOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+
+// ===== HUD =====
+function updateHUD() {
+  const bet = BET_OPTIONS[betIdx];
+  const lns = LINES_OPTIONS[linesIdx];
+  document.getElementById('balanceDisplay').textContent  = balance;
+  document.getElementById('betDisplay').textContent      = bet;
+  document.getElementById('linesDisplay').textContent    = lns;
+  document.getElementById('creditDisplay').textContent   = balance;
+
+  const bs = document.getElementById('balanceSide');
+  const ws = document.getElementById('winSide');
+  const bts = document.getElementById('betSide');
+  const lss = document.getElementById('linesSide');
+  if (bs) bs.textContent = balance;
+  if (ws) ws.textContent = lastWin;
+  if (bts) bts.textContent = bet;
+  if (lss) lss.textContent = lns;
+}
+
+function changeBet(d) {
+  betIdx = Math.max(0, Math.min(BET_OPTIONS.length-1, betIdx+d));
+  updateHUD();
+}
+function setMaxBet() { betIdx = BET_OPTIONS.length-1; updateHUD(); }
+function changeLines(d) {
+  linesIdx = Math.max(0, Math.min(LINES_OPTIONS.length-1, linesIdx+d));
+  updateHUD(); buildLineNums();
+}
+
+// ===== SPIN =====
+async function spin() {
+  if (spinning) return;
+  const bet = BET_OPTIONS[betIdx];
+  const lns = LINES_OPTIONS[linesIdx];
+  const totalBet = bet * lns;
+  if (balance < totalBet) { showMessage('НЕДОСТАТОЧНО КРЕДИТОВ'); return; }
+
+  spinning = true;
+  balance -= totalBet;
+  lastWin = 0;
+  updateHUD();
+  clearWin();
+  clearPaylineCanvas();
+  document.querySelectorAll('.symbol.win-highlight').forEach(e => e.classList.remove('win-highlight'));
+
+  // Lock buttons
+  ['spinBtn','spinBtnSide'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+
+  const size = getSymSize();
+
+  // Start spinning
+  for (let c = 0; c < REELS; c++) {
+    const reel = document.getElementById(`reel-${c}`);
+    reel.classList.add('spinning');
+    beep(200 + c*40, 0.15, 'sawtooth', 0.06);
+  }
+
+  // Generate results
+  const newGrid = [];
+  for (let c = 0; c < REELS; c++) {
+    newGrid[c] = [];
+    for (let r = 0; r < ROWS; r++) newGrid[c][r] = getRandSym();
+  }
+
+  // Stop reels one by one
+  for (let c = 0; c < REELS; c++) {
+    await delay(300 + c * 250);
+    stopReel(c, newGrid[c], size);
+    beep(300 + c*60, 0.12, 'square', 0.07);
+  }
+
+  await delay(200);
+  grid = newGrid;
+
+  // Evaluate
+  const { totalWin, winLines } = evaluate(LINES_OPTIONS[linesIdx], bet);
+
+  if (totalWin > 0) {
+    balance += totalWin;
+    lastWin = totalWin;
+    updateHUD();
+    highlightWins(winLines, size);
+    await delay(400);
+    showWin(totalWin, winLines);
+    confetti();
+    beep(523, 0.1); beep(659, 0.1); beep(784, 0.2);
+  } else {
+    updateHUD();
+  }
+
+  ['spinBtn','spinBtnSide'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+  spinning = false;
+  persistBalanceToServer();
+}
+
+function stopReel(c, newRow, symSize) {
+  const reel = document.getElementById(`reel-${c}`);
+  reel.classList.remove('spinning');
+  for (let r = 0; r < ROWS; r++) {
+    const cell = document.getElementById(`sym-${c}-${r}`);
+    cell.innerHTML = makeSymHTML(newRow[r], symSize);
+  }
+  const strip = document.getElementById(`strip-${c}`);
+  strip.style.transition = 'transform 0.1s cubic-bezier(0.2,0,0.1,1)';
+  strip.style.transform = 'translateY(5px)';
+  setTimeout(() => {
+    strip.style.transform = 'translateY(0)';
+    setTimeout(() => { strip.style.transition = ''; }, 110);
+  }, 70);
+}
+
+// ===== EVALUATE =====
+function evaluate(activeLines, bet) {
+  let totalWin = 0;
+  const winLines = [];
+  const paylines = PAYLINES.slice(0, activeLines);
+
+  for (const pl of paylines) {
+    const row = pl.rows.map((r, c) => grid[c][r]);
+    // Garage is wild
+    let firstNonWild = row.find(s => s !== 'garage');
+    let matchSym = firstNonWild || 'garage';
+    let count = 0;
+
+    for (let c = 0; c < REELS; c++) {
+      if (row[c] === matchSym || row[c] === 'garage') count++;
+      else break;
+    }
+
+    if (count >= 3) {
+      const sym = getSym(matchSym);
+      const mults = { 3: 0.1, 4: 0.5, 5: 1.0 };
+      const lineWin = Math.round(bet * sym.mult * (mults[count] || 0));
+      if (lineWin > 0) {
+        totalWin += lineWin;
+        winLines.push({ pl, count, sym, lineWin, rows: pl.rows });
+      }
+    }
+  }
+  return { totalWin, winLines };
+}
+
+// ===== HIGHLIGHT =====
+function highlightWins(winLines, symSize) {
+  for (const wl of winLines) {
+    for (let c = 0; c < wl.count; c++) {
+      const cell = document.getElementById(`sym-${c}-${wl.rows[c]}`);
+      if (cell) cell.classList.add('win-highlight');
+    }
+    drawPayline(wl.pl, wl.count, symSize, wl.pl.color);
+  }
+}
+
+// ===== PAYLINE SVG =====
+function getSymCenter(col, row, symSize) {
+  const x = col * (symSize + 2) + symSize / 2;
+  const y = row * symSize + symSize / 2;
+  return { x, y };
+}
+
+function drawPayline(pl, count, symSize, color) {
+  const svg = document.getElementById('paylineCanvas');
+  const points = [];
+  for (let c = 0; c < count; c++) {
+    const { x, y } = getSymCenter(c, pl.rows[c], symSize);
+    points.push(`${x},${y}`);
+  }
+  const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  poly.setAttribute('points', points.join(' '));
+  poly.setAttribute('fill', 'none');
+  poly.setAttribute('stroke', color);
+  poly.setAttribute('stroke-width', '3');
+  poly.setAttribute('stroke-linecap', 'round');
+  poly.setAttribute('stroke-linejoin', 'round');
+  poly.setAttribute('opacity', '0.85');
+  poly.setAttribute('filter', `drop-shadow(0 0 4px ${color})`);
+  poly.style.strokeDasharray = '6 4';
+  poly.style.animation = 'dashAnim 0.5s linear infinite';
+  svg.appendChild(poly);
+
+  const { x: sx, y: sy } = getSymCenter(0, pl.rows[0], symSize);
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', sx); circle.setAttribute('cy', sy); circle.setAttribute('r', '6');
+  circle.setAttribute('fill', color); circle.setAttribute('opacity', '0.9');
+  svg.appendChild(circle);
+}
+
+function clearPaylineCanvas() {
+  const svg = document.getElementById('paylineCanvas');
+  svg.innerHTML = `<defs><style>@keyframes dashAnim { to { stroke-dashoffset: -20; } }</style></defs>`;
+}
+
+// ===== WIN DISPLAY =====
+let winTimer = null;
+function showWin(amount, winLines) {
+  document.getElementById('winAmount').textContent = '+' + amount;
+  document.getElementById('winLinesInfo').textContent = winLines.map(w => `Линия ${w.pl.id}`).join(', ');
+  document.getElementById('winOverlay').classList.add('show');
+  if (winTimer) clearTimeout(winTimer);
+  winTimer = setTimeout(clearWin, 3500);
+}
+function clearWin() {
+  document.getElementById('winOverlay').classList.remove('show');
+  clearPaylineCanvas();
+  document.querySelectorAll('.symbol.win-highlight').forEach(e => e.classList.remove('win-highlight'));
+}
+function showMessage(msg) {
+  document.getElementById('winAmount').textContent = msg;
+  document.getElementById('winLinesInfo').textContent = '';
+  document.getElementById('winOverlay').classList.add('show');
+  if (winTimer) clearTimeout(winTimer);
+  winTimer = setTimeout(clearWin, 1500);
+}
+
+document.getElementById('winOverlay').addEventListener('click', clearWin);
+
+// ===== SOUND =====
+function toggleSound() {
+  soundOn = !soundOn;
+  const ico = soundOn ? '🔊' : '🔇';
+  ['soundBtn'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.textContent = ico;
+  });
+}
+
+async function syncBalanceFromServer(){
+  try{
+    const r=await fetch('/api/me/balances',{credentials:'same-origin'});
+    const d=await r.json();
+    if(r.ok&&d.ok&&typeof d.main_balance==='number'&&typeof d.bonus_balance==='number'){
+      dbBalances.main=Math.floor(d.main_balance);
+      dbBalances.bonus=Math.floor(d.bonus_balance);
+      balance=selectedAccount==='main'?dbBalances.main:dbBalances.bonus;
+      updateHUD();
+    }
+  }catch(e){}
+}
+
+function buildExitButton(){
+  const btn=document.createElement('a');
+  btn.href='/';
+  btn.textContent='⬅ Назад';
+  btn.style.cssText='position:fixed;top:8px;left:8px;z-index:1200;padding:5px 9px;border-radius:8px;border:1px solid rgba(255,170,68,0.45);background:rgba(0,0,0,0.55);color:#ffaa44;font-weight:700;font-size:12px;text-decoration:none;font-family:Arial,sans-serif;';
+  document.body.appendChild(btn);
+}
+
+let _persistBalanceTimer=null;
+function persistBalanceToServer(accountSnapshot,balanceSnapshot){
+  const account=accountSnapshot||selectedAccount;
+  const bal=Number.isFinite(Number(balanceSnapshot))?Number(balanceSnapshot):balance;
+  dbBalances[account]=Math.max(0,Math.floor(bal));
+  if(_persistBalanceTimer)clearTimeout(_persistBalanceTimer);
+  _persistBalanceTimer=setTimeout(async()=>{
+    try{
+      await fetch('/api/me/set_balance',{
+        method:'POST',credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({account,balance:bal})
+      });
+    }catch(e){}
+  },300);
+}
+
+function buildAccountSwitch(){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;top:8px;right:8px;z-index:1200;display:flex;flex-direction:column;gap:4px;background:rgba(0,0,0,0.45);padding:4px;border-radius:8px;border:1px solid rgba(255,170,68,0.35);';
+  const mk=(label,acc)=>{
+    const b=document.createElement('button');
+    b.textContent=label;
+    b.style.cssText='padding:4px 8px;border-radius:7px;border:1px solid rgba(255,170,68,0.35);background:rgba(0,0,0,0.35);color:#ffaa44;font-weight:700;font-size:12px;cursor:pointer;';
+    b.onclick=()=>{selectedAccount=acc;balance=acc==='main'?dbBalances.main:dbBalances.bonus;updateHUD();[...wrap.querySelectorAll("button")].forEach(x=>x.style.opacity='0.7');b.style.opacity='1';};
+    return b;
+  };
+  const bMain=mk('💰 Осн.','main');
+  const bBonus=mk('🎁 Бонус','bonus');
+  bMain.style.opacity='0.7';bBonus.style.opacity='1';
+  wrap.appendChild(bMain);wrap.appendChild(bBonus);
+  document.body.appendChild(wrap);
+}
+
+// ===== CONFETTI =====
+function confetti() {
+  const colors = ['#ffd700','#ff8800','#ff3300','#00cc44','#4488ff','#cc44cc'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    el.style.animationDelay = (Math.random() * 0.4) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+// ===== RESIZE =====
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    applyLayout();
+    buildReels();
+    buildLineNums();
+  }, 150);
+});
+
+// ===== INIT =====
+applyLayout();
+buildPaytable();
+buildReels();
+buildLineNums();
+updateHUD();
+syncBalanceFromServer();
+buildExitButton();
+buildAccountSwitch();
+
+// ===== FULLSCREEN =====
+function goFullscreen(){
+  const el=document.documentElement;
+  const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(req){req.call(el).catch(()=>{});}
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('fsBtn');
+  if(!btn)return;
+  if(document.fullscreenElement){btn.textContent='✕';btn.onclick=()=>document.exitFullscreen&&document.exitFullscreen();}
+  else{btn.textContent='⛶';btn.onclick=goFullscreen;}
+});
+// Auto-enable fullscreen on load
+goFullscreen();
+</script>
+</body>
+</html>

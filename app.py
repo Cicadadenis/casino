@@ -1,9 +1,11 @@
 import os
 import random
 import secrets
+import jwt
+import datetime
 import sqlite3
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -60,20 +62,36 @@ EXTERNAL_PAGES = {
     },
     "garage": {
         "filename": "garage.html",
-        "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\garage.html",
-        "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/garage.html",
+        "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\garage (2).html",
+        "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/garage (2).html",
     },
     "admin-panel": {
         "filename": "admin.html",
         "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\admin.html",
         "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/admin.html",
     },
+    "fruit-cocktail": {
+        "filename": "fruit-cocktail.html",
+        "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\fruit-cocktail.html",
+        "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/fruit-cocktail.html",
+    },
+    "crazy-monkey": {
+        "filename": "crazy-monkey.html",
+        "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\crazy-monkey.html",
+        "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/crazy-monkey.html",
+    },
+    "island": {
+        "filename": "island.html",
+        "windows_path": r"c:\Users\denis\Downloads\Telegram Desktop\island.html",
+        "wsl_path": "/mnt/c/Users/denis/Downloads/Telegram Desktop/island.html",
+    },
 }
 
 
 def create_app():
-    issued_admin_tokens = set()
-    issued_user_tokens = {}
+
+    ADMIN_JWT_SECRET = os.getenv("ADMIN_JWT_SECRET", "supersecretjwtkey")
+    ADMIN_JWT_ALG = "HS256"
 
     def resolve_external_page_path(game_key):
         meta = EXTERNAL_PAGES.get(game_key)
@@ -136,17 +154,37 @@ def create_app():
     def login_required(view):
         @wraps(view)
         def wrapped_view(*args, **kwargs):
-            if "user_id" not in session:
-                return redirect(url_for("login"))
-            return view(*args, **kwargs)
+            # Сессия Flask
+            if "user_id" in session:
+                return view(*args, **kwargs)
+            # JWT Bearer токен
+            auth = request.headers.get("Authorization", "")
+            if auth.startswith("Bearer "):
+                token = auth[7:]
+                try:
+                    payload = jwt.decode(token, ADMIN_JWT_SECRET, algorithms=[ADMIN_JWT_ALG])
+                    session["user_id"] = payload["uid"]
+                    return view(*args, **kwargs)
+                except Exception:
+                    pass
+            return jsonify({"ok": False, "what": "Unauthorized"}), 401
 
         return wrapped_view
 
     def current_user():
-        if "user_id" not in session:
-            return None
-        user = g.db.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
-        return user
+        # Сессия Flask
+        if "user_id" in session:
+            return g.db.execute("SELECT * FROM users WHERE id = ?", (session["user_id"],)).fetchone()
+        # JWT Bearer токен
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth[7:]
+            try:
+                payload = jwt.decode(token, ADMIN_JWT_SECRET, algorithms=[ADMIN_JWT_ALG])
+                return g.db.execute("SELECT * FROM users WHERE id = ?", (payload["uid"],)).fetchone()
+            except Exception:
+                pass
+        return None
 
     def add_transaction(user_id, tx_type, amount, status, note=""):
         g.db.execute(
@@ -192,23 +230,29 @@ def create_app():
         return round(total_win, 2), win_lines
 
     def cryptobot_create_invoice(amount, asset="USDT"):
-        token = app.config["CRYPTOBOT_TOKEN"]
+        import requests as req_lib
+        token = os.getenv("CRYPTOBOT_TOKEN")
+        api_url = os.getenv("CRYPTOBOT_API_URL", "https://pay.crypt.bot/api")
+
         if not token:
-            return {"ok": False, "error": "CRYPTOBOT_TOKEN не задан в .env"}
+            return {"ok": False, "error": "CRYPTOBOT_TOKEN не задан"}
 
-        payload = urlencode({"asset": asset, "amount": f"{amount:.2f}", "description": "Пополнение баланса"}).encode()
-        req = Request(
-            f"{app.config['CRYPTOBOT_API_URL']}/createInvoice",
-            data=payload,
-            headers={"Crypto-Pay-API-Token": token},
-            method="POST",
-        )
         try:
-            with urlopen(req, timeout=15) as response:
-                import json
-
-                data = json.loads(response.read().decode("utf-8"))
-            return data
+            resp = req_lib.post(
+                f"{api_url}/createInvoice",
+                headers={
+                    "Crypto-Pay-API-Token": token,
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0"
+                },
+                json={
+                    "asset": asset,
+                    "amount": str(round(amount, 6)),
+                    "description": "Пополнение баланса"
+                },
+                timeout=15
+            )
+            return resp.json()
         except Exception as exc:
             return {"ok": False, "error": str(exc)}
 
@@ -257,21 +301,32 @@ def create_app():
             abort(404)
         return send_file(path)
 
+    @app.route("/admin-panel")
+    def admin_panel():
+        path = resolve_external_page_path("admin-panel")
+        if not path:
+            abort(404)
+        return send_file(path)
+
     def admin_api_required(view):
         @wraps(view)
+
         def wrapped(*args, **kwargs):
             auth = request.headers.get("Authorization", "")
             token = auth.replace("Bearer ", "", 1).strip() if auth.startswith("Bearer ") else ""
             if not token:
                 return jsonify({"what": "Unauthorized"}), 401
-            if token in issued_admin_tokens:
-                g.api_is_admin = True
-                return view(*args, **kwargs)
-            token_uid = issued_user_tokens.get(token)
-            if token_uid:
-                g.api_user_id = int(token_uid)
-                g.api_is_admin = False
-                return view(*args, **kwargs)
+            try:
+                payload = jwt.decode(token, ADMIN_JWT_SECRET, algorithms=[ADMIN_JWT_ALG])
+                if payload.get("role") == "admin":
+                    g.api_is_admin = True
+                    return view(*args, **kwargs)
+                elif payload.get("role") == "user":
+                    g.api_user_id = int(payload.get("uid", 0))
+                    g.api_is_admin = False
+                    return view(*args, **kwargs)
+            except Exception:
+                return jsonify({"what": "Unauthorized"}), 401
             return jsonify({"what": "Unauthorized"}), 401
 
         return wrapped
@@ -284,16 +339,25 @@ def create_app():
         expected_email = os.getenv("ADMIN_EMAIL", "satanasat3301@gmail.com").strip().lower()
         expected_password = os.getenv("ADMIN_PASSWORD", "cicada3301")
         if email == expected_email and secret == expected_password:
-            token = secrets.token_urlsafe(32)
-            issued_admin_tokens.add(token)
+            payload = {
+                "role": "admin",
+                "email": email,
+                "exp": int((datetime.utcnow() + timedelta(days=7)).timestamp())
+            }
+            token = jwt.encode(payload, ADMIN_JWT_SECRET, algorithm=ADMIN_JWT_ALG)
             return jsonify({"access": token})
 
         user = g.db.execute("SELECT id, username, password_hash FROM users WHERE username = ?", (email,)).fetchone()
         if not user or not check_password_hash(user["password_hash"], secret):
             return jsonify({"what": "Неверные учетные данные"}), 401
-        session["user_id"] = int(user["id"])
-        token = secrets.token_urlsafe(32)
-        issued_user_tokens[token] = int(user["id"])
+        # JWT для обычного пользователя
+        payload = {
+            "role": "user",
+            "uid": int(user["id"]),
+            "email": user["username"],
+            "exp": int((datetime.utcnow() + timedelta(days=7)).timestamp())
+        }
+        token = jwt.encode(payload, ADMIN_JWT_SECRET, algorithm=ADMIN_JWT_ALG)
         return jsonify(
             {
                 "access": token,
@@ -407,6 +471,44 @@ def create_app():
             add_transaction(uid, "admin_add_bonus", amount, "done", "Выдача бонусов админом")
         else:
             return jsonify({"what": "Неизвестный cid"}), 400
+        g.db.commit()
+        return jsonify({"ok": True})
+
+    @app.route("/prop/wallet/set", methods=["POST"])
+    @admin_api_required
+    def admin_wallet_set():
+        payload = request.get_json(silent=True) or {}
+        try:
+            uid = int(payload.get("uid") or getattr(g, "api_user_id", 0))
+            main_balance = float(payload.get("main_balance", 0))
+            bonus_balance = float(payload.get("bonus_balance", 0))
+        except (TypeError, ValueError):
+            return jsonify({"what": "Incorrect parameters"}), 400
+        if not getattr(g, "api_is_admin", False):
+            return jsonify({"what": "Forbidden"}), 403
+        
+        user = g.db.execute("SELECT id, main_balance, bonus_balance FROM users WHERE id = ?", (uid,)).fetchone()
+        if not user:
+            return jsonify({"what": "User not found"}), 404
+
+        old_main = float(user["main_balance"])
+        old_bonus = float(user["bonus_balance"])
+        
+        # Update balances
+        g.db.execute("UPDATE users SET main_balance = ?, bonus_balance = ? WHERE id = ?", (main_balance, bonus_balance, uid))
+        
+        # Record transactions for changes
+        main_delta = main_balance - old_main
+        bonus_delta = bonus_balance - old_bonus
+        
+        if main_delta != 0:
+            tx_type = "admin_edit_main" if main_delta > 0 else "admin_edit_main_remove"
+            add_transaction(uid, tx_type, abs(main_delta), "done", f"Editing main balance: {old_main} -> {main_balance}")
+        
+        if bonus_delta != 0:
+            tx_type = "admin_edit_bonus" if bonus_delta > 0 else "admin_edit_bonus_remove"
+            add_transaction(uid, tx_type, abs(bonus_delta), "done", f"Editing bonus balance: {old_bonus} -> {bonus_balance}")
+        
         g.db.commit()
         return jsonify({"ok": True})
 
@@ -727,6 +829,196 @@ def create_app():
                 g.db.commit()
                 add_transaction(invoice["user_id"], "deposit", invoice["amount"], "done", "Инвойс оплачен")
         return {"ok": True}
+
+    @app.route("/transaction/list", methods=["GET"])
+    @login_required
+    def transaction_list():
+        limit = int(request.args.get("limit", 20))
+        user = current_user()
+        txs = g.db.execute(
+            "SELECT tx_type, amount, status, note, created_at FROM transactions WHERE user_id = ? ORDER BY id DESC LIMIT ?",
+            (user["id"], limit)
+        ).fetchall()
+        return jsonify([dict(tx) for tx in txs])
+
+    @app.route("/cryptobot/invoice", methods=["POST"])
+    @login_required
+    def cryptobot_invoice():
+        user = current_user()
+        payload = request.get_json(silent=True) or {}
+        try:
+            coins = int(payload.get("coins", 0))
+            cid = int(payload.get("cid", 0))
+            asset = payload.get("asset", "USDT").strip().upper()
+        except (TypeError, ValueError):
+            return jsonify({"what": "Invalid parameters"}), 400
+        
+        if coins <= 0:
+            return jsonify({"what": "Amount must be positive"}), 400
+        if asset not in {"USDT", "TRX", "LTC"}:
+            return jsonify({"what": "Unsupported asset"}), 400
+
+        # Convert coins (UAH) to crypto amount using exchange rates
+        amount_uah = float(coins)
+        try:
+            rates = get_uah_rates()
+            rate_uah = rates[asset]
+        except Exception:
+            return jsonify({"what": "Failed to get exchange rates"}), 500
+
+        amount_asset = amount_uah / rate_uah
+        decimals = 2 if asset == "USDT" else 4 if asset == "TRX" else 6
+        amount_asset = round(amount_asset, decimals)
+        if amount_asset <= 0:
+            return jsonify({"what": "Amount too small"}), 400
+
+        # Create crypto invoice
+        result = cryptobot_create_invoice(amount_asset, asset=asset)
+        if not result.get("ok"):
+            add_transaction(
+                user["id"],
+                "deposit",
+                amount_uah,
+                "failed",
+                f"CryptoBot error ({asset}): {result.get('error', 'unknown')}",
+            )
+            return jsonify({"what": f"CryptoBot error: {result.get('error', 'unknown')}"}), 500
+
+        # CryptoBot API returns {"ok": true, "result": {invoice_id, pay_url, ...}}
+        invoice = result.get("result", result)
+        g.db.execute(
+            "INSERT INTO crypto_invoices (user_id, invoice_id, amount, asset, pay_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (user["id"], invoice.get("invoice_id"), amount_uah, invoice.get("asset", asset), invoice.get("pay_url", ""), "new", datetime.utcnow().isoformat())
+        )
+        g.db.commit()
+        add_transaction(
+            user["id"],
+            "deposit",
+            amount_uah,
+            "pending",
+            f"Инвойс: {amount_asset} {asset} (~{amount_uah:.2f} грн)",
+        )
+
+        return jsonify({"ok": True, "pay_url": invoice.get("pay_url", ""), "invoice_id": invoice.get("invoice_id")})
+
+    @app.route("/cryptobot/status", methods=["GET"])
+    @login_required
+    def cryptobot_status():
+        import requests as req_lib
+        invoice_id = request.args.get("invoice_id")
+        cid = request.args.get("cid", 0)
+        if not invoice_id:
+            return jsonify({"ok": False, "what": "no invoice_id"}), 400
+
+        token = os.getenv("CRYPTOBOT_TOKEN")
+        api_url = os.getenv("CRYPTOBOT_API_URL", "https://pay.crypt.bot/api")
+
+        try:
+            resp = req_lib.get(
+                f"{api_url}/getInvoices",
+                headers={"Crypto-Pay-API-Token": token},
+                params={"invoice_ids": invoice_id},
+                timeout=10
+            )
+            data = resp.json()
+        except Exception as e:
+            return jsonify({"ok": False, "what": str(e)}), 500
+
+        items = data.get("result", {}).get("items", [])
+        if not items:
+            return jsonify({"ok": False, "what": "invoice not found"}), 404
+
+        invoice = items[0]
+        status = invoice.get("status")
+
+        if status == "paid":
+            # Проверяем не зачислили ли уже
+            user = current_user()
+            row = g.db.execute(
+                "SELECT * FROM crypto_invoices WHERE invoice_id = ? AND status != 'paid'",
+                (invoice_id,)
+            ).fetchone()
+            if row:
+                g.db.execute(
+                    "UPDATE users SET main_balance = main_balance + ? WHERE id = ?",
+                    (row["amount"], row["user_id"])
+                )
+                g.db.execute(
+                    "UPDATE crypto_invoices SET status = 'paid' WHERE invoice_id = ?",
+                    (invoice_id,)
+                )
+                g.db.commit()
+                add_transaction(row["user_id"], "deposit", row["amount"], "done", "Инвойс оплачен")
+            return jsonify({"ok": True, "status": "paid"})
+
+        return jsonify({"ok": True, "status": status})
+
+    @app.route("/cryptobot/withdraw", methods=["POST"])
+    @login_required
+    def cryptobot_withdraw():
+        import requests as req_lib
+        import time as _time
+        user = current_user()
+        payload = request.get_json(silent=True) or {}
+
+        try:
+            coins = int(payload.get("coins", 0))
+            telegram_user_id = int(payload.get("telegram_user_id", 0))
+            cid = int(payload.get("cid", 0))
+        except (TypeError, ValueError):
+            return jsonify({"what": "Неверные параметры"}), 400
+
+        if coins < 1000:
+            return jsonify({"what": "Минимум 1000 монет"}), 400
+
+        if not telegram_user_id:
+            return jsonify({"what": "Укажите Telegram User ID"}), 400
+
+        balance = float(user["main_balance"])
+        if coins > balance:
+            return jsonify({"what": "Недостаточно средств"}), 400
+
+        # Конвертируем монеты в USDT (1000 монет = 1 USDT, меняй под свой курс)
+        amount_usdt = round(coins / 1000, 2)
+        if amount_usdt < 0.1:
+            return jsonify({"what": "Сумма слишком мала"}), 400
+
+        token = os.getenv("CRYPTOBOT_TOKEN")
+        api_url = os.getenv("CRYPTOBOT_API_URL", "https://pay.crypt.bot/api")
+
+        try:
+            resp = req_lib.post(
+                f"{api_url}/transfer",
+                headers={
+                    "Crypto-Pay-API-Token": token,
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "user_id": telegram_user_id,
+                    "asset": "USDT",
+                    "amount": str(amount_usdt),
+                    "spend_id": f"withdraw_{user['id']}_{int(_time.time())}",
+                    "comment": "Вывод из SlotKing"
+                },
+                timeout=15
+            )
+            result = resp.json()
+        except Exception as e:
+            return jsonify({"what": str(e)}), 500
+
+        if result.get("ok"):
+            # Списываем монеты
+            g.db.execute(
+                "UPDATE users SET main_balance = main_balance - ? WHERE id = ?",
+                (coins, user["id"])
+            )
+            g.db.commit()
+            add_transaction(user["id"], "withdraw", coins, "done",
+                           f"Вывод {amount_usdt} USDT → TG:{telegram_user_id}")
+            return jsonify({"ok": True})
+        else:
+            err = result.get("error", {})
+            return jsonify({"what": f"CryptoBot: {err.get('name', 'ошибка')}"}), 500
 
     return app
 

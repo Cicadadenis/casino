@@ -100,15 +100,7 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
 .hud-value{
   color:#f5c842;font-family:'Cinzel',serif;font-size:clamp(12px,2.3vw,17px);
   text-shadow:0 0 10px rgba(245,200,66,0.9),0 0 3px #ff8800;font-weight:700;
-  transition:color 0.2s;
 }
-.hud-value.pop{animation:hudPop 0.35s cubic-bezier(0.36,0.07,0.19,0.97);}
-@keyframes hudPop{
-  0%{transform:scale(1);}
-  40%{transform:scale(1.25);color:#fff;text-shadow:0 0 15px #ffdd00,0 0 30px #ff8800;}
-  100%{transform:scale(1);}
-}
-/* Title glow pulse */
 .title-center{
   font-family:'Cinzel Decorative',serif;
   font-size:clamp(16px,4.5vw,38px);
@@ -120,11 +112,6 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
     0 0 50px rgba(255,160,0,0.4);
   letter-spacing:4px;
   filter:drop-shadow(0 3px 10px rgba(180,100,0,0.7));
-  animation:titlePulse 4s ease-in-out infinite;
-}
-@keyframes titlePulse{
-  0%,100%{text-shadow:0 0 25px rgba(245,200,66,0.9),3px 3px 0 #3a1400,-1px -1px 0 #6a3000,0 0 50px rgba(255,160,0,0.4);}
-  50%{text-shadow:0 0 40px rgba(255,220,80,1),3px 3px 0 #3a1400,-1px -1px 0 #6a3000,0 0 80px rgba(255,180,0,0.7),0 0 120px rgba(255,120,0,0.3);}
 }
 
 /* ===== MAIN ===== */
@@ -174,32 +161,8 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
     inset 0 0 30px rgba(0,0,0,0.8);
   width:100%;max-width:740px;overflow:hidden;
 }
-/* Ambient light scan */
-.reels-frame::after{
-  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent 0%,rgba(255,220,100,0.025) 50%,transparent 100%);
-  animation:lightScan 6s ease-in-out infinite;
-  pointer-events:none;z-index:50;
-}
-@keyframes lightScan{
-  0%{left:-60%;}
-  40%{left:120%;}
-  100%{left:120%;}
-}
-.reels-frame.free-spins-active{
-  box-shadow:
-    0 0 0 1px #1a0800,
-    0 0 0 3px #ff8800,
-    0 0 0 6px #ff660055,
-    0 0 60px rgba(255,120,0,0.35),
-    0 0 100px rgba(255,80,0,0.15),
-    inset 0 0 30px rgba(0,0,0,0.8);
-  animation:frameGlowFS 1.5s ease-in-out infinite;
-}
-@keyframes frameGlowFS{
-  0%,100%{box-shadow:0 0 0 1px #1a0800,0 0 0 3px #ff8800,0 0 40px rgba(255,120,0,0.25),inset 0 0 30px rgba(0,0,0,0.8);}
-  50%{box-shadow:0 0 0 1px #1a0800,0 0 0 4px #ffaa00,0 0 80px rgba(255,160,0,0.5),0 0 120px rgba(255,100,0,0.2),inset 0 0 30px rgba(0,0,0,0.8);}
-}
+/* Stone column separators — hidden */
+.reel-sep{display:none;}
 .reels-inner{display:flex;position:relative;overflow:hidden;}
 
 /* ===== REEL ===== */
@@ -217,20 +180,8 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
   background:linear-gradient(180deg,rgba(255,210,100,0.03) 0%,transparent 100%);
   z-index:20;pointer-events:none;
 }
-.reel.spinning .reel-strip{animation:reelSpin 0.12s linear infinite;}
+.reel.spinning .reel-strip{animation:reelSpin 0.08s linear infinite;}
 @keyframes reelSpin{0%{transform:translateY(0);}100%{transform:translateY(-33.33%);}}
-.reel.spinning{filter:blur(0.5px);}
-.reel.spinning .symbol{opacity:0.88;}
-.reel-blur-overlay{
-  position:absolute;top:0;left:0;right:0;bottom:0;z-index:25;pointer-events:none;
-  background:linear-gradient(180deg,
-    rgba(0,0,0,0.35) 0%,
-    transparent 18%,
-    transparent 82%,
-    rgba(0,0,0,0.35) 100%);
-  opacity:0;transition:opacity 0.15s;
-}
-.reel.spinning .reel-blur-overlay{opacity:1;}
 .reel-strip{display:flex;flex-direction:column;will-change:transform;width:100%;}
 
 /* ===== SYMBOL ===== */
@@ -240,164 +191,20 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
   border-bottom:1px solid rgba(80,50,10,0.3);
   position:relative;overflow:hidden;
 }
-.symbol.win-highlight{animation:winFlash 0.45s ease-in-out infinite alternate;z-index:5;}
+.symbol.win-highlight{animation:winFlash 0.35s ease-in-out infinite alternate;z-index:5;}
 @keyframes winFlash{
-  from{filter:brightness(1) drop-shadow(0 0 0px transparent);transform:scale(1);}
-  to{filter:brightness(2.4) drop-shadow(0 0 18px #ffdd00) drop-shadow(0 0 8px #ff8800);transform:scale(1.05);}
+  from{filter:brightness(1) drop-shadow(0 0 0px transparent);}
+  to{filter:brightness(2.2) drop-shadow(0 0 14px #ffdd00) drop-shadow(0 0 6px #ff8800);}
 }
-.symbol.expanding-sym{animation:expandFlash 0.5s ease-in-out infinite alternate;z-index:6;}
+.symbol.expanding-sym{animation:expandFlash 0.4s ease-in-out infinite alternate;z-index:6;}
 @keyframes expandFlash{
-  from{filter:brightness(1.4) drop-shadow(0 0 6px #ff8800);transform:scaleX(1);}
-  to{filter:brightness(3.2) drop-shadow(0 0 28px #ffaa00) drop-shadow(0 0 12px #ffffff);transform:scaleX(1.03);}
+  from{filter:brightness(1.4) drop-shadow(0 0 4px #ff8800);}
+  to{filter:brightness(2.8) drop-shadow(0 0 20px #ffaa00) drop-shadow(0 0 8px #ffffff);}
 }
 
-/* Book scatter glow animation */
-@keyframes bookScatterPulse{
-  0%,100%{filter:brightness(1.5) drop-shadow(0 0 8px #ff8800) drop-shadow(0 0 20px #ffaa00);transform:scale(1);}
-  50%{filter:brightness(3) drop-shadow(0 0 25px #ffdd00) drop-shadow(0 0 50px #ff6600);transform:scale(1.12) rotate(5deg);}
-}
-.symbol.scatter-glow{animation:bookScatterPulse 0.6s ease-in-out infinite;z-index:7;}
-
-/* ===== BOOK BONUS INTRO OVERLAY ===== */
-#bonusIntroOverlay{
-  position:fixed;inset:0;z-index:200;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 80% 70% at 50% 40%,rgba(30,15,0,0.97),rgba(5,2,0,0.99));
-  overflow:hidden;
-}
-#bonusIntroOverlay.show{display:flex;}
-#bonusIntroOverlay::before{
-  content:'';position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse 40% 30% at 50% 20%,rgba(255,160,0,0.12),transparent 60%),
-    radial-gradient(ellipse 20% 60% at 10% 80%,rgba(180,100,0,0.07),transparent 55%),
-    radial-gradient(ellipse 20% 60% at 90% 80%,rgba(180,100,0,0.07),transparent 55%);
-  pointer-events:none;animation:introBgPulse 3s ease-in-out infinite;
-}
-@keyframes introBgPulse{
-  0%,100%{opacity:0.7;}50%{opacity:1;}
-}
-
-.bonus-intro-rays{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:min(120vw,120vh);height:min(120vw,120vh);
-  background:conic-gradient(from 0deg,transparent 0deg,rgba(255,180,0,0.04) 10deg,transparent 20deg,rgba(255,160,0,0.03) 30deg,transparent 40deg,rgba(255,200,0,0.05) 50deg,transparent 60deg,rgba(255,180,0,0.04) 70deg,transparent 80deg,rgba(255,160,0,0.03) 90deg,transparent 100deg,rgba(255,200,0,0.05) 110deg,transparent 120deg,rgba(255,180,0,0.04) 130deg,transparent 140deg,rgba(255,160,0,0.03) 150deg,transparent 160deg,rgba(255,200,0,0.05) 170deg,transparent 180deg,rgba(255,180,0,0.04) 190deg,transparent 200deg,rgba(255,160,0,0.03) 210deg,transparent 220deg,rgba(255,200,0,0.05) 230deg,transparent 240deg,rgba(255,180,0,0.04) 250deg,transparent 260deg,rgba(255,160,0,0.03) 270deg,transparent 280deg,rgba(255,200,0,0.05) 290deg,transparent 300deg,rgba(255,180,0,0.04) 310deg,transparent 320deg,rgba(255,160,0,0.03) 330deg,transparent 340deg,rgba(255,200,0,0.05) 350deg,transparent 360deg);
-  animation:raysRotate 8s linear infinite;
-  pointer-events:none;
-}
-@keyframes raysRotate{to{transform:translate(-50%,-50%) rotate(360deg);}}
-
-.bonus-intro-book{
-  font-size:clamp(80px,20vw,180px);
-  animation:bookBounce 0.8s cubic-bezier(0.36,0.07,0.19,0.97) 3;
-  filter:drop-shadow(0 0 40px #ff8800) drop-shadow(0 0 80px #ffaa00);
-  position:relative;z-index:5;
-  margin-bottom:clamp(10px,2vh,20px);
-}
-@keyframes bookBounce{
-  0%{transform:scale(0) rotate(-30deg);opacity:0;}
-  40%{transform:scale(1.3) rotate(8deg);opacity:1;}
-  60%{transform:scale(0.95) rotate(-4deg);}
-  80%{transform:scale(1.08) rotate(2deg);}
-  100%{transform:scale(1) rotate(0deg);opacity:1;}
-}
-
-.bonus-intro-title{
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(24px,7vw,64px);
-  color:var(--gold);
-  text-shadow:0 0 30px rgba(245,200,66,1),0 0 60px rgba(200,120,0,0.6),5px 5px 0 #3a1400,-1px -1px 0 #6a3000;
-  letter-spacing:6px;
-  animation:titleSlideIn 0.7s cubic-bezier(0.2,0.8,0.2,1) 0.5s both;
-  position:relative;z-index:5;text-align:center;padding:0 16px;
-}
-@keyframes titleSlideIn{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
-
-.bonus-intro-spins{
-  font-family:'Cinzel',serif;
-  font-size:clamp(18px,5vw,48px);
-  color:#ffcc44;
-  letter-spacing:4px;
-  animation:spinsScale 0.6s cubic-bezier(0.2,0.8,0.2,1) 1s both;
-  position:relative;z-index:5;
-  text-shadow:0 0 20px rgba(255,200,0,0.9);
-}
-@keyframes spinsScale{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
-
-.bonus-intro-sym{
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  background:rgba(0,0,0,0.5);border:2px solid rgba(255,180,0,0.5);
-  border-radius:16px;padding:clamp(10px,2.5vw,20px) clamp(16px,4vw,36px);
-  animation:symReveal 0.5s cubic-bezier(0.2,0.8,0.2,1) 1.4s both;
-  position:relative;z-index:5;margin-top:12px;
-  box-shadow:0 0 30px rgba(255,160,0,0.2) inset,0 0 50px rgba(0,0,0,0.5);
-}
-@keyframes symReveal{from{transform:scale(0.7) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
-.bonus-intro-sym-icon{font-size:clamp(40px,10vw,80px);animation:symSpin 1s ease-in-out 1.6s 1;}
-@keyframes symSpin{0%{transform:rotateY(0);}50%{transform:rotateY(180deg);}100%{transform:rotateY(360deg);}}
-.bonus-intro-sym-text{
-  font-family:'Cinzel',serif;font-size:clamp(11px,2.5vw,18px);
-  color:#c8a45a;letter-spacing:2px;text-align:center;
-}
-.bonus-intro-sym-expand{
-  font-family:'Cinzel',serif;font-size:clamp(9px,1.8vw,13px);
-  color:#ff8800;letter-spacing:1px;text-align:center;
-}
-
-/* Particles */
-.intro-particles{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden;}
-.intro-particle{
-  position:absolute;border-radius:50%;
-  animation:particleFly var(--dur,3s) var(--delay,0s) ease-out infinite;
-}
-@keyframes particleFly{
-  0%{transform:translate(var(--sx,0),var(--sy,0)) scale(0);opacity:0;}
-  10%{opacity:1;}
-  100%{transform:translate(var(--ex,0),var(--ey,0)) scale(0.3);opacity:0;}
-}
-
-/* Enhanced WIN overlay */
-.win-overlay{
-  position:absolute;inset:0;z-index:30;
-  display:none;flex-direction:column;
-  align-items:center;justify-content:center;
-  pointer-events:auto;
-}
-.win-overlay.show{display:flex;}
-.win-overlay::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(20,10,0,0.88),rgba(5,2,0,0.95));
-  animation:winBgPulse 1.2s ease-in-out infinite;
-}
-@keyframes winBgPulse{0%,100%{opacity:0.9;}50%{opacity:1;}}
-.win-amount{
-  position:relative;z-index:2;
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(24px,7vw,64px);
-  color:var(--gold);
-  text-shadow:0 0 30px rgba(255,200,0,1),0 0 60px rgba(255,140,0,0.5);
-  animation:winAmountPop 0.5s cubic-bezier(0.2,0.8,0.2,1) both;
-  letter-spacing:4px;text-align:center;padding:0 16px;
-}
-@keyframes winAmountPop{from{transform:scale(0.3) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-.win-lines-info{
-  position:relative;z-index:2;
-  font-family:'Cinzel',serif;
-  font-size:clamp(10px,2.2vw,16px);
-  color:#c8a45a;letter-spacing:2px;margin-top:8px;text-align:center;
-}
-.win-coins-anim{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-.coin{
-  position:absolute;font-size:clamp(14px,2.5vw,22px);
-  animation:coinFall var(--cd,2s) var(--cdelay,0s) ease-in forwards;
-}
-@keyframes coinFall{
-  0%{transform:translate(var(--cx,50vw),-5vh) rotate(0deg);opacity:1;}
-  100%{transform:translate(calc(var(--cx,50vw) + var(--csx,0px)),110vh) rotate(var(--crot,360deg));opacity:0;}
-}
-
-/* Re-add payline canvas */
 #paylineCanvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:15;}
+
+/* ===== BOTTOM DECO — pyramid base ===== */
 .bottom-deco{
   width:100%;max-width:740px;
   background:linear-gradient(180deg,#1a1000 0%,#120c00 60%,#0a0800 100%);
@@ -512,23 +319,15 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
     0 0 50px rgba(220,100,0,0.2),
     0 5px 15px rgba(0,0,0,0.8),
     inset 0 2px 6px rgba(255,240,140,0.3);
-  animation:spinGlow 2s ease-in-out infinite;transition:all 0.15s;
+  animation:spinGlow 2s ease-in-out infinite;transition:all 0.12s;
   text-shadow:0 1px 3px rgba(0,0,0,0.8),0 0 10px rgba(255,200,80,0.8);
-  position:relative;overflow:hidden;
 }
-.spin-btn::before{
-  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-  background:conic-gradient(transparent 0deg,rgba(255,240,150,0.08) 60deg,transparent 120deg);
-  animation:spinBtnRotate 3s linear infinite;
-}
-@keyframes spinBtnRotate{to{transform:rotate(360deg);}}
 @keyframes spinGlow{
   0%,100%{box-shadow:0 0 0 2px #2a1000,0 0 0 4px #884400,0 0 18px rgba(255,140,0,0.4),0 5px 15px rgba(0,0,0,0.8),inset 0 2px 6px rgba(255,240,140,0.3);}
-  50%{box-shadow:0 0 0 2px #2a1000,0 0 0 4px #cc8800,0 0 40px rgba(255,200,0,0.8),0 0 70px rgba(220,120,0,0.35),0 5px 15px rgba(0,0,0,0.8),inset 0 2px 6px rgba(255,240,140,0.3);}
+  50%{box-shadow:0 0 0 2px #2a1000,0 0 0 4px #cc8800,0 0 35px rgba(255,180,0,0.7),0 0 60px rgba(220,120,0,0.25),0 5px 15px rgba(0,0,0,0.8),inset 0 2px 6px rgba(255,240,140,0.3);}
 }
-.spin-btn:active{transform:scale(0.9);box-shadow:0 0 0 2px #2a1000,0 0 0 3px #884400,0 2px 6px rgba(0,0,0,0.8);}
-.spin-btn:disabled{opacity:0.5;cursor:not-allowed;animation:none;}
-.spin-btn:disabled::before{display:none;}
+.spin-btn:active{transform:scale(0.92);}
+.spin-btn:disabled{opacity:0.4;cursor:not-allowed;animation:none;}
 
 /* Info / sound buttons */
 .info-btn{
@@ -564,61 +363,28 @@ body{display:flex;align-items:center;justify-content:center;background:#030200;}
 /* ===== WIN OVERLAY ===== */
 .win-overlay{
   position:absolute;inset:0;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  z-index:30;pointer-events:auto;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  z-index:30;pointer-events:none;opacity:0;transition:opacity 0.25s;
 }
-.win-overlay.show{display:flex;}
-.win-overlay::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 70% 50% at 50% 40%,rgba(20,10,0,0.88),rgba(5,2,0,0.95));
-  animation:winBgPulse 1.2s ease-in-out infinite;
-}
-@keyframes winBgPulse{0%,100%{opacity:0.9;}50%{opacity:1;}}
-.win-amount{
-  position:relative;z-index:2;
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(24px,7vw,60px);
-  color:var(--gold);
-  text-shadow:0 0 30px rgba(255,200,0,1),0 0 60px rgba(255,140,0,0.5),3px 3px 0 #3a1400;
-  animation:winAmountPop 0.5s cubic-bezier(0.2,0.8,0.2,1) both;
-  letter-spacing:4px;text-align:center;padding:0 16px;
-}
-@keyframes winAmountPop{from{transform:scale(0.3) rotate(-10deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
-.win-lines-info{
-  position:relative;z-index:2;
-  font-family:'Cinzel',serif;
-  font-size:clamp(10px,2.2vw,15px);
-  color:#c8a45a;letter-spacing:2px;margin-top:8px;text-align:center;
-}
-.win-coins-anim{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-
-/* ===== FREE SPINS STATUS BAR ===== */
-#freeSpinsBar{
-  display:none;
-  background:linear-gradient(90deg,#1a0800,#2a1200,#3a2000,#2a1200,#1a0800);
-  border:2px solid #ff8800;
-  border-radius:8px;
-  padding:5px 18px;
-  margin:4px auto;
+.win-overlay.show{opacity:1;pointer-events:auto;}
+.win-box{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(120,70,0,0.6) 0%,transparent 60%),
+    linear-gradient(160deg,rgba(20,10,0,0.98),rgba(30,15,0,0.98));
+  border:2px solid var(--gold-dark);
+  border-top-color:var(--gold);
+  border-radius:10px;
+  padding:clamp(10px,2.5vw,22px) clamp(16px,4.5vw,44px);
   text-align:center;
-  font-family:'Cinzel Decorative',serif;
-  font-size:clamp(11px,2.2vw,16px);
-  color:#ffcc44;
-  letter-spacing:2px;
-  box-shadow:0 0 20px rgba(255,140,0,0.4),inset 0 0 15px rgba(255,100,0,0.1);
-  animation:freeSpinsBarPulse 1.5s ease-in-out infinite;
-  width:fit-content;max-width:100%;
+  box-shadow:0 0 60px rgba(240,160,0,0.4),0 0 120px rgba(180,100,0,0.15),inset 0 0 30px rgba(0,0,0,0.5);
+  animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
-#freeSpinsBar.show{display:block;}
-@keyframes freeSpinsBarPulse{
-  0%,100%{box-shadow:0 0 15px rgba(255,140,0,0.3),inset 0 0 10px rgba(255,100,0,0.08);}
-  50%{box-shadow:0 0 35px rgba(255,180,0,0.7),inset 0 0 25px rgba(255,120,0,0.2);}
-}
-#freeSpinsBar .fs-sym{
-  font-size:clamp(14px,2.5vw,20px);margin-right:8px;
-  animation:fsSymBob 1s ease-in-out infinite;display:inline-block;
-}
-@keyframes fsSymBob{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}
+@keyframes popIn{0%{transform:scale(0.4) rotate(-5deg);opacity:0;}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+.win-title{color:var(--gold);font-family:'Cinzel Decorative',serif;font-size:clamp(14px,3.5vw,24px);letter-spacing:3px;text-shadow:0 0 15px rgba(245,200,66,0.7);}
+.win-amount{color:white;font-family:'Cinzel',serif;font-size:clamp(24px,5.5vw,46px);text-shadow:0 0 25px rgba(255,200,80,0.9),0 0 5px #ff8800;}
+.win-lines-info{color:#9a7830;font-size:clamp(9px,1.8vw,12px);margin-top:5px;letter-spacing:1px;font-family:'Cinzel',serif;}
+
+/* ===== LANDSCAPE side panels ===== */
 body.landscape .title-bar,body.landscape .controls-bar{display:none!important;}
 body.landscape .side-ctrl-panel{
   display:flex!important;flex-direction:column;align-items:center;justify-content:center;
@@ -678,16 +444,9 @@ body.landscape .side-ctrl-panel.right-c{border-left:2px solid var(--gold-dark);}
     0 4px 12px rgba(0,0,0,0.8);
   animation:spinGlow 2s ease-in-out infinite;transition:all 0.1s;
   text-shadow:0 1px 3px rgba(0,0,0,0.8),0 0 10px rgba(255,200,80,0.8);
-  position:relative;overflow:hidden;
-}
-.side-spin-btn::before{
-  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
-  background:conic-gradient(transparent 0deg,rgba(255,240,150,0.08) 60deg,transparent 120deg);
-  animation:spinBtnRotate 3s linear infinite;
 }
 .side-spin-btn:active{transform:scale(0.92);}
 .side-spin-btn:disabled{opacity:0.4;cursor:not-allowed;animation:none;}
-.side-spin-btn:disabled::before{display:none;}
 
 .side-double-btn{
   padding:4px 8px;border-radius:5px;
@@ -1030,7 +789,6 @@ body.landscape .lines-panel{display:none;}
 
     <!-- REELS AREA -->
     <div class="reels-area">
-      <div id="freeSpinsBar"><span class="fs-sym" id="fsSymIcon">🧭</span><span id="fsBarText">10 ФРИСПИНОВ ОСТАЛОСЬ</span></div>
       <div class="reels-frame" id="reelsFrame">
         <div class="reels-inner" id="reelsInner"></div>
         <svg id="paylineCanvas" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -1045,9 +803,11 @@ body.landscape .lines-panel{display:none;}
       </div>
       <!-- Win overlay -->
       <div class="win-overlay" id="winOverlay">
-        <div class="win-coins-anim" id="winCoinsAnim"></div>
-        <div class="win-amount" id="winAmount">0</div>
-        <div class="win-lines-info" id="winLinesInfo"></div>
+        <div class="win-box">
+          <div class="win-title">🏺 ВЫИГРЫШ!</div>
+          <div class="win-amount" id="winAmount">0</div>
+          <div class="win-lines-info" id="winLinesInfo"></div>
+        </div>
       </div>
     </div>
 
@@ -1138,20 +898,6 @@ body.landscape .lines-panel{display:none;}
   <div class="rotate-icon">📱</div>
   <div class="rotate-text">РАЗВЕРНИТЕ ЭКРАН</div>
   <div class="rotate-sub">Игра доступна только в горизонтальном режиме</div>
-</div>
-
-<!-- ===== BONUS INTRO OVERLAY ===== -->
-<div id="bonusIntroOverlay">
-  <div class="bonus-intro-rays"></div>
-  <div class="intro-particles" id="introParticles"></div>
-  <div class="bonus-intro-book" id="bonusIntroBook">📖</div>
-  <div class="bonus-intro-title">🎰 ФРИСПИНЫ!</div>
-  <div class="bonus-intro-spins" id="bonusIntroSpinsText">10 БЕСПЛАТНЫХ ВРАЩЕНИЙ</div>
-  <div class="bonus-intro-sym" id="bonusIntroSymBox">
-    <div class="bonus-intro-sym-icon" id="bonusIntroSymIcon">🧭</div>
-    <div class="bonus-intro-sym-text">РАСШИРЯЮЩИЙСЯ СИМВОЛ</div>
-    <div class="bonus-intro-sym-expand" id="bonusIntroSymName">АРХЕОЛОГ — ЗАПОЛНЯЕТ БАРАБАН</div>
-  </div>
 </div>
 
 <!-- ===== PAYTABLE ===== -->
@@ -1342,10 +1088,6 @@ function buildReels(){
       strip.appendChild(cell);
     }
     reel.appendChild(strip);
-    // Add motion blur overlay
-    const blurDiv=document.createElement('div');
-    blurDiv.className='reel-blur-overlay';
-    reel.appendChild(blurDiv);
     container.appendChild(reel);
   }
 }
@@ -1401,15 +1143,8 @@ async function spin(){
 
   beep(220,0.06,'sawtooth',0.04);
 
-  // Staggered reel spin start for realism
   for(let c=0;c<REELS;c++){
-    setTimeout(()=>{
-      document.getElementById(`reel-${c}`).classList.add('spinning');
-    }, c*60);
-  }
-
-  for(let c=0;c<REELS;c++){
-    await delay(200+c*240);
+    await delay(180+c*220);
     stopReel(c,newGrid[c]);
     beep(300+c*40,0.1,'square',0.06);
   }
@@ -1428,13 +1163,6 @@ async function spin(){
       }
     }
     if(expanded){
-      // Flash the reels frame border
-      const frame=document.getElementById('reelsFrame');
-      if(frame){
-        frame.style.transition='box-shadow 0.15s';
-        frame.style.boxShadow='0 0 0 1px #1a0800,0 0 0 5px #ffaa00,0 0 60px rgba(255,180,0,0.8),inset 0 0 30px rgba(0,0,0,0.8)';
-        setTimeout(()=>{frame.style.boxShadow='';frame.style.transition='';},400);
-      }
       // Update visuals after expansion
       const sz=getSymSize();
       for(let c=0;c<REELS;c++){
@@ -1445,9 +1173,8 @@ async function spin(){
           }
         }
       }
-      beep(440,0.06,'sine',0.07);
-      setTimeout(()=>beep(660,0.12,'sine',0.09),120);
-      await delay(350);
+      beep(550,0.12,'sine',0.08);
+      await delay(300);
     }
   }
 
@@ -1472,11 +1199,6 @@ async function spin(){
   }
 
   if(freeSpinsActive){
-    // Check retrigger (3+ books during free spins)
-    if(bookCount>=3){
-      await checkRetrigger();
-    }
-
     freeSpinsLeft--;
     freeSpinsWin+=totalWin;
     if(totalWin>0){balance+=totalWin;lastWin=totalWin;}
@@ -1511,7 +1233,7 @@ function highlightScatter(){
   for(let c=0;c<REELS;c++) for(let r=0;r<ROWS;r++){
     if(grid[c][r]==='book'){
       const cell=document.getElementById(`sym-${c}-${r}`);
-      if(cell){cell.classList.add('win-highlight','scatter-glow');}
+      if(cell) cell.classList.add('win-highlight');
     }
   }
 }
@@ -1520,81 +1242,32 @@ function highlightScatter(){
 function triggerFreeSpins(bet,lines){
   freeBet=bet; freeLines=lines;
   freeSpinsTotal=10; freeSpinsLeft=10; freeSpinsWin=0;
+  // Pick expanding symbol (not book)
   const candidates=SYMBOLS.filter(s=>!s.scatter&&!s.wild);
   expandingSymbol=candidates[Math.floor(Math.random()*candidates.length)].id;
-  showBonusIntro();
+  showFreeSpinsIntro();
 }
 
-function spawnIntroParticles(){
-  const container=document.getElementById('introParticles');
-  container.innerHTML='';
-  const colors=['#ffd700','#ffaa00','#ff8800','#ffee44','#fff0a0','#ffcc00','#ff6600'];
-  for(let i=0;i<60;i++){
-    const p=document.createElement('div');
-    p.className='intro-particle';
-    const size=4+Math.random()*10;
-    const startX=Math.random()*100;
-    const startY=50+Math.random()*60;
-    const endX=(Math.random()-0.5)*160;
-    const endY=-(60+Math.random()*80);
-    const dur=1.5+Math.random()*2.5;
-    const dly=Math.random()*2;
-    p.style.cssText=`
-      width:${size}px;height:${size}px;
-      left:${startX}%;top:${startY}%;
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      opacity:0.9;box-shadow:0 0 ${size}px currentColor;
-      --sx:${startX}%;--sy:${startY}%;
-      --ex:${endX}px;--ey:${endY}px;
-      --dur:${dur}s;--delay:${dly}s;
-    `;
-    container.appendChild(p);
-  }
-}
-
-function showBonusIntro(){
+function showFreeSpinsIntro(){
   const sym=getSym(expandingSymbol);
-  const bookCount=countSymbol('book');
-
-  // Update intro overlay content
-  document.getElementById('bonusIntroBook').textContent='📖';
-  document.getElementById('bonusIntroSpinsText').textContent=
-    `${bookCount} КНИГИ РА → 10 БЕСПЛАТНЫХ ВРАЩЕНИЙ`;
-  document.getElementById('bonusIntroSymIcon').textContent=sym.e;
-  document.getElementById('bonusIntroSymName').textContent=
-    `${sym.label} — РАСШИРЯЕТСЯ НА БАРАБАН`;
-
-  spawnIntroParticles();
-
-  const overlay=document.getElementById('bonusIntroOverlay');
+  const overlay=document.getElementById('winOverlay');
+  document.getElementById('winAmount').textContent='🎰 10 ФРИСПИНОВ!';
+  document.getElementById('winLinesInfo').textContent=`Расширяющийся символ: ${sym.e} ${sym.label}`;
   overlay.classList.add('show');
+  // Update HUD to show free spins
   freeSpinsActive=true;
-  // Glow the reels frame
-  const frame=document.getElementById('reelsFrame');
-  if(frame) frame.classList.add('free-spins-active');
   updateFreeSpinsHUD();
-
-  // Dramatic beeps
-  if(soundOn){
-    setTimeout(()=>beep(220,0.08,'sine',0.06),0);
-    setTimeout(()=>beep(330,0.08,'sine',0.07),200);
-    setTimeout(()=>beep(440,0.08,'sine',0.08),400);
-    setTimeout(()=>beep(550,0.1,'sine',0.09),600);
-    setTimeout(()=>beep(660,0.15,'sine',0.1),800);
-    setTimeout(()=>beep(880,0.3,'sine',0.12),1100);
-  }
-
-  setTimeout(()=>{
+  if(winTimer)clearTimeout(winTimer);
+  winTimer=setTimeout(()=>{
     overlay.classList.remove('show');
     clearCanvas();
-    document.querySelectorAll('.symbol.win-highlight,.symbol.scatter-glow').forEach(e=>{
-      e.classList.remove('win-highlight','scatter-glow');
-    });
     spin();
-  },3800);
+  },2800);
 }
 
 function updateFreeSpinsHUD(){
+  const bet=BET_OPTS[betIdx];
+  const lines=LINE_OPTS[linesIdx];
   const ids={
     balanceDisplay:balance,betDisplay:freeBet,winDisplay:lastWin,linesDisplay:freeLines,
     betCtrl:freeBet,linesCtrl:freeLines,balSide:balance,betSide:freeBet,linesSide:freeLines,
@@ -1603,70 +1276,20 @@ function updateFreeSpinsHUD(){
     const el=document.getElementById(id);
     if(el)el.textContent=val;
   }
-  // Show free spins bar
-  const bar=document.getElementById('freeSpinsBar');
-  const barText=document.getElementById('fsBarText');
-  const fsIcon=document.getElementById('fsSymIcon');
-  if(bar){
-    bar.classList.add('show');
-    const sym=getSym(expandingSymbol);
-    if(fsIcon&&sym) fsIcon.textContent=sym.e;
-    if(barText) barText.textContent=`${freeSpinsLeft} ФРИСПИНОВ ОСТАЛОСЬ | ВЫИГРЫШ: ${freeSpinsWin}`;
-  }
+  // Show freespins counter in win display area or similar
   const wEl=document.getElementById('winDisplay');
-  if(wEl) wEl.textContent=`FS:${freeSpinsLeft}`;
+  if(wEl) wEl.textContent=`FS:${freeSpinsLeft} | ${lastWin}`;
 }
 
 function endFreeSpins(){
   freeSpinsActive=false; expandingSymbol=null;
   const totalWon=freeSpinsWin;
   freeSpinsWin=0;
-  // Hide free spins bar
-  const bar=document.getElementById('freeSpinsBar');
-  if(bar) bar.classList.remove('show');
-  // Remove reels glow
-  const frame=document.getElementById('reelsFrame');
-  if(frame) frame.classList.remove('free-spins-active');
   clearCanvas();
-  document.querySelectorAll('.symbol.win-highlight,.symbol.expanding-sym,.symbol.scatter-glow')
-    .forEach(e=>{e.classList.remove('win-highlight','expanding-sym','scatter-glow');});
+  document.querySelectorAll('.symbol.win-highlight,.symbol.expanding-sym').forEach(e=>{e.classList.remove('win-highlight','expanding-sym');});
   updateHUD();
-  if(totalWon>0){
-    confetti();
-    showWinOverlay('🎰 ФРИСПИНЫ: +'+totalWon,[]);
-    setDoubleActive(true);
-    // Extra coin burst
-    spawnCoins(40);
-  } else {
-    showWinOverlay('🎰 ФРИСПИНЫ ЗАВЕРШЕНЫ',[]);
-  }
-}
-
-// Check for retrigger during free spins (called from spin loop)
-function checkRetrigger(){
-  const bookCount=countSymbol('book');
-  if(freeSpinsActive && bookCount>=3){
-    freeSpinsLeft+=10;
-    freeSpinsTotal+=10;
-    updateFreeSpinsHUD();
-    highlightScatter();
-    // Show retrigger message via win overlay briefly
-    const prev=document.getElementById('winAmount').textContent;
-    const prevInfo=document.getElementById('winLinesInfo').textContent;
-    document.getElementById('winAmount').textContent='📖 +10 ФРИСПИНОВ!';
-    document.getElementById('winLinesInfo').textContent=`${bookCount} книги! Осталось: ${freeSpinsLeft}`;
-    const ov=document.getElementById('winOverlay');
-    ov.classList.add('show');
-    beep(660,0.15,'sine',0.1);
-    setTimeout(()=>beep(880,0.2,'sine',0.12),200);
-    return new Promise(res=>setTimeout(()=>{
-      ov.classList.remove('show');
-      document.querySelectorAll('.symbol.scatter-glow,.symbol.win-highlight')
-        .forEach(e=>e.classList.remove('scatter-glow','win-highlight'));
-      res();
-    },2200));
-  }
-  return Promise.resolve();
+  if(totalWon>0){confetti();showWinOverlay('🎰 ФРИСПИНЫ: +'+totalWon,[]);setDoubleActive(true);}
+  else{showWinOverlay('🎰 ФРИСПИНЫ ЗАВЕРШЕНЫ',[]);}
 }
 
 // ===== EVALUATE =====
@@ -1712,18 +1335,10 @@ function stopReel(c,newRow){
     const cell=document.getElementById(`sym-${c}-${r}`);
     cell.innerHTML=makeSymHTML(newRow[r],symSize);
   }
-  // Smooth elastic bounce stop
-  strip.style.transition='transform 0.18s cubic-bezier(0.22,1.2,0.36,1)';
-  strip.style.transform='translateY(10px)';
-  setTimeout(()=>{
-    strip.style.transition='transform 0.14s cubic-bezier(0.4,0,0.2,1)';
-    strip.style.transform='translateY(-3px)';
-    setTimeout(()=>{
-      strip.style.transition='transform 0.1s ease-out';
-      strip.style.transform='translateY(0)';
-      setTimeout(()=>{strip.style.transition='';},100);
-    },140);
-  },80);
+  strip.style.transition='transform 0.12s cubic-bezier(0.4,0,0.2,1)';
+  strip.style.transform='translateY(6px)';
+  setTimeout(()=>{strip.style.transform='translateY(0)';
+    setTimeout(()=>{strip.style.transition='';},120);},80);
 }
 
 function highlightWins(winLines){
@@ -1778,15 +1393,6 @@ function clearCanvas(){
 }
 
 // ===== HUD =====
-function popEl(id){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.classList.remove('pop');
-  void el.offsetWidth;
-  el.classList.add('pop');
-  setTimeout(()=>el.classList.remove('pop'),400);
-}
-
 function updateHUD(){
   const bet=BET_OPTS[betIdx];
   const lines=LINE_OPTS[linesIdx];
@@ -1798,7 +1404,6 @@ function updateHUD(){
     const el=document.getElementById(id);
     if(el)el.textContent=val;
   }
-  if(lastWin>0){popEl('winDisplay');popEl('balanceDisplay');}
   persistBalanceToServer(selectedAccount,balance);
 }
 
@@ -1824,27 +1429,6 @@ function setDoubleActive(on){
   });
 }
 
-// ===== COIN RAIN =====
-function spawnCoins(count){
-  const container=document.getElementById('winCoinsAnim');
-  if(!container)return;
-  container.innerHTML='';
-  const coins=['🪙','💰','✨','⭐','💛'];
-  for(let i=0;i<count;i++){
-    const el=document.createElement('div');
-    el.className='coin';
-    const cx=10+Math.random()*80;
-    const sx=(Math.random()-0.5)*60;
-    const rot=(Math.random()-0.5)*720;
-    const dur=1.2+Math.random()*1.8;
-    const dly=Math.random()*0.8;
-    el.style.cssText=`left:${cx}%;top:-5%;--cx:${cx}%;--csx:${sx}px;--crot:${rot}deg;--cd:${dur}s;--cdelay:${dly}s;`;
-    el.textContent=coins[Math.floor(Math.random()*coins.length)];
-    container.appendChild(el);
-    setTimeout(()=>el.remove(),(dur+dly)*1000+200);
-  }
-}
-
 // ===== WIN OVERLAY =====
 let winTimer=null;
 function showWinOverlay(text,winLines){
@@ -1853,10 +1437,6 @@ function showWinOverlay(text,winLines){
   const info=winLines.map(w=>`Линия ${w.pl.id}`).join(', ');
   document.getElementById('winLinesInfo').textContent=info;
   ov.classList.add('show');
-  // Spawn coins for wins
-  if(winLines.length>0||text.includes('+')){
-    spawnCoins(winLines.length>2?35:20);
-  }
   if(winTimer)clearTimeout(winTimer);
   winTimer=setTimeout(()=>{
     ov.classList.remove('show');
@@ -2082,20 +1662,14 @@ function buildExitButton(){
 
 // ===== CONFETTI =====
 function confetti(){
-  const cols=['#ffd700','#ffaa00','#ff8800','#ffee44','#fff0a0','#ffcc00','#ff6600','#ffe0a0'];
-  const shapes=['▪','★','◆','●','▲','⭐'];
-  for(let i=0;i<70;i++){
-    const el=document.createElement('div');
-    el.className='confetti-piece';
+  const cols=['#ffd700','#ffaa00','#ff8800','#ffee44','#fff0a0','#ffcc00'];
+  for(let i=0;i<45;i++){
+    const el=document.createElement('div');el.className='confetti-piece';
     el.style.left=Math.random()*100+'vw';
     el.style.background=cols[Math.floor(Math.random()*cols.length)];
-    el.style.animationDuration=(1.2+Math.random()*2.5)+'s';
-    el.style.animationDelay=Math.random()*0.8+'s';
-    el.style.width=(6+Math.random()*10)+'px';
-    el.style.height=(6+Math.random()*10)+'px';
-    el.style.borderRadius=Math.random()>0.5?'50%':'2px';
-    document.body.appendChild(el);
-    setTimeout(()=>el.remove(),4500);
+    el.style.animationDuration=(1.5+Math.random()*2)+'s';
+    el.style.animationDelay=Math.random()*0.5+'s';
+    document.body.appendChild(el);setTimeout(()=>el.remove(),4000);
   }
 }
 

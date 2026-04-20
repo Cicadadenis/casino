@@ -226,9 +226,11 @@ body::before{content:'';position:fixed;inset:0;background:
   overflow:hidden;cursor:pointer;transition:all 0.3s;position:relative;height:400px !important;
 }
 .l-game-card:hover{border-color:rgba(201,168,76,0.6);transform:scale(1.02);box-shadow:0 25px 50px rgba(0,0,0,0.6);}
-.l-game-thumb{height:250px !important;display:flex;align-items:center;justify-content:center;font-size:80px !important;position:relative;overflow:hidden;}
-.l-game-thumb::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c1),var(--c2));}
-.l-game-thumb span{position:relative;z-index:1;}
+.l-game-thumb{height:250px !important;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.l-game-thumb::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--c1),var(--c2));z-index:1;}
+.l-game-thumb img{position:relative;z-index:2;width:90%;height:85%;object-fit:cover;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:transform 0.3s;}
+.l-game-thumb span{position:relative;z-index:2;font-size:80px !important;}
+.l-game-card:hover .l-game-thumb img{transform:scale(1.05);}
 .l-game-lock{
   position:absolute;inset:0;background:rgba(0,0,0,0.8);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -823,10 +825,12 @@ const BOR_SYMS=[
 ];
 const GEN_SYMS=['🍒','🍋','🍊','🍇','⭐','💎','7️⃣','🔔','🃏','🎰'];
 const GAMES=[
-  {id:'book-of-ra',sa:'Book of Ra Redesign',name:'Book of Ra',provider:'SlotKing',rtp:96.1,feat:true,em:'📖',c1:'#2d1500',c2:'#7a3d00',_url:'/play/book-of-ra'},
-  {id:'gnome',sa:'Gnome Redesign',name:'Gnome Slots',provider:'SlotKing',rtp:95.6,feat:true,em:'🧙',c1:'#102220',c2:'#1f5f4f',_url:'/play/gnome'},
-  {id:'resident',sa:'Resident Redesign',name:'Resident Slots',provider:'SlotKing',rtp:95.2,feat:true,em:'🧟',c1:'#1c1020',c2:'#4b1e2f',_url:'/play/resident'},
-  {id:'garage',sa:'Garage',name:'Garage Slots',provider:'SlotKing',rtp:95.0,feat:true,em:'🏁',c1:'#1a2a40',c2:'#3a5070',_url:'/play/garage'},
+  {id:'book-of-ra',sa:'Book of Ra Redesign',name:'Book of Ra',provider:'SlotKing',rtp:96.1,feat:true,em:'📖',c1:'#2d1500',c2:'#7a3d00',_url:'/play/book-of-ra',img:'/static/games/book-of-ra.svg'},
+  {id:'resident',sa:'Resident Redesign',name:'Resident Slots',provider:'SlotKing',rtp:95.2,feat:true,em:'🧟',c1:'#1c1020',c2:'#4b1e2f',_url:'/play/resident',img:'/static/games/resident.svg'},
+  {id:'garage',sa:'Garage',name:'Garage Slots',provider:'SlotKing',rtp:95.0,feat:true,em:'🏁',c1:'#1a2a40',c2:'#3a5070',_url:'/play/garage',img:'/static/games/garage.svg'},
+  {id:'fruit-cocktail',sa:'Fruit Cocktail',name:'Fruit Cocktail',provider:'SlotKing',rtp:95.5,feat:true,em:'🍹',c1:'#001a4d',c2:'#003d99',_url:'/play/fruit-cocktail',img:'/static/games/fruit-cocktail.svg'},
+  {id:'crazy-monkey',sa:'Crazy Monkey',name:'Crazy Monkey',provider:'SlotKing',rtp:95.3,feat:true,em:'🐒',c1:'#1a3a00',c2:'#2d8c00',_url:'/play/crazy-monkey',img:'/static/games/crazy-monkey.svg'},
+  {id:'island',sa:'Island',name:'Island Slots',provider:'SlotKing',rtp:95.4,feat:true,em:'🏝️',c1:'#0a1e3a',c2:'#1a3a6a',_url:'/play/island',img:'/static/games/island.svg'},
 ];
 const PROMOS=[
   {title:'Приветственный Бонус',desc:'1000 монет на бонусный счёт при регистрации — автоматически.',tag:'НОВИЧКАМ',em:'🎁',c1:'#1a0d00',c2:'#4d2800'},
@@ -853,6 +857,10 @@ let freeSpinsLeft=0,expandingSym=null,fsTotalWin=0;
 let depPollTimer=null,pendingInvoiceId=null;
 
 function ne(e){return String(e||'').trim().toLowerCase();}
+// Инициализация при загрузке страницы: если пользователь залогинен, синхронизируем баланс
+if(currentUser && token && token !== 'demo'){
+  syncBalance().catch(err=>console.error('Failed to sync balance on load:',err));
+}
 </script>
 
 <!-- HEADER -->
@@ -1806,15 +1814,14 @@ function saveLocalBalance(){
 
 async function syncBalance(){
   if(!token||token==='demo'||!currentUser?.uid)return;
-  const uid=currentUser.uid;
-  // Основной счёт
-  const rMain=await api('POST','/prop/wallet/get',{cid:MAIN_CID,uid});
-  if(rMain.ok&&typeof rMain.data?.wallet==='number')currentUser.balance=Math.floor(rMain.data.wallet);
-  // Бонусный счёт
-  const rBonus=await api('POST','/prop/wallet/get',{cid:BONUS_CID,uid});
-  if(rBonus.ok&&typeof rBonus.data?.wallet==='number')currentUser.bonus=Math.floor(rBonus.data.wallet);
-  localStorage.setItem('sk_user',JSON.stringify(currentUser));
-  refreshBal();
+  // Используем /api/me/balances — он не требует admin токена
+  const r=await api('GET','/api/me/balances');
+  if(r.ok&&r.data?.ok){
+    if(typeof r.data.main_balance==='number')currentUser.balance=Math.floor(r.data.main_balance);
+    if(typeof r.data.bonus_balance==='number')currentUser.bonus=Math.floor(r.data.bonus_balance);
+    localStorage.setItem('sk_user',JSON.stringify(currentUser));
+    refreshBal();
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -1885,7 +1892,8 @@ function renderLandingGames(){
   show.forEach(x=>{
     const c=document.createElement('div');c.className='l-game-card';
     c.onclick=()=>openAuth('register');
-    c.innerHTML=`<div class="l-game-thumb" style="--c1:${x.c1};--c2:${x.c2};"><span>${x.em}</span></div><div class="l-game-lock"><span>🔒</span><p>Войти и играть</p></div><div class="l-game-info"><div class="l-game-name">${x.name}</div><div class="l-game-prov">${x.provider} · ${x.rtp}%</div></div>`;
+    const thumbContent = x.img ? `<img src="${x.img}" alt="${x.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><span style="display:none">${x.em}</span>` : `<span>${x.em}</span>`;
+    c.innerHTML=`<div class="l-game-thumb" style="--c1:${x.c1};--c2:${x.c2};">${thumbContent}</div><div class="l-game-lock"><span>🔒</span><p>Войти и играть</p></div><div class="l-game-info"><div class="l-game-name">${x.name}</div><div class="l-game-prov">${x.provider} · ${x.rtp}%</div></div>`;
     g.appendChild(c);
   });
 }
@@ -2024,6 +2032,7 @@ function localUsers(){try{return JSON.parse(localStorage.getItem('sk_local_users
 function saveLocalUsers(db){localStorage.setItem('sk_local_users',JSON.stringify(db));}
 function localToken(em){return 'local_'+btoa(em).replace(/=/g,'');}
 
+
 async function doLogin(){
   const em=document.getElementById('le').value.trim(),pw=document.getElementById('lp').value;
   if(!em||!pw)return sm('lm','Заполните все поля','err');
@@ -2031,7 +2040,6 @@ async function doLogin(){
   const r=await api('POST','/signin',{email:em,secret:pw});
   if(r.ok&&r.data.access){
     token=r.data.access;
-    // Устанавливаем нули — реальные данные придут с сервера через syncBalance
     currentUser={
       uid:r.data.uid,
       email:r.data.email||em,
@@ -2070,7 +2078,6 @@ async function doRegister(){
         localStorage.setItem('sk_token',token);
         localStorage.setItem('sk_user',JSON.stringify(currentUser));
         localStorage.setItem('sk_pw',pw);
-        await fetch('/bonus/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:newUid})});
         await syncBalance();
         enterApp(true);
       } else {

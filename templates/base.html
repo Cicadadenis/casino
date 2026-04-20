@@ -16,7 +16,7 @@
         <span class="logo-icon">🎰</span>
         <span class="logo-text">SLOTKING</span>
       </a>
-      <nav class="nav">
+      <nav class="nav" id="mainNav">
         <a href="{{ url_for('index') }}">Главная</a>
         <a href="{{ url_for('games_menu') }}">Игры</a>
         {% if session.get('user_id') %}
@@ -27,6 +27,9 @@
           <a href="{{ url_for('register') }}">Регистрация</a>
         {% endif %}
       </nav>
+      <button class="hamburger" id="hamburgerBtn" onclick="document.getElementById('mainNav').classList.toggle('nav-open');this.classList.toggle('active')">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
 
