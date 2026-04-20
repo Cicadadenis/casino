@@ -2112,6 +2112,10 @@ window.addEventListener('resize',()=>{
   clearTimeout(rsTimer);
   rsTimer=setTimeout(()=>{applyLayout();buildReels();buildLineNums();},150);
 });
+window.addEventListener('orientationchange',()=>{
+  setTimeout(()=>{applyLayout();buildReels();buildLineNums();if(window.innerWidth>window.innerHeight)goFullscreen();},500);
+  setTimeout(()=>{if(window.innerWidth>window.innerHeight)goFullscreen();},800);
+});
 
 // ===== INIT =====
 applyLayout();

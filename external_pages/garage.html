@@ -1451,7 +1451,11 @@ document.addEventListener('fullscreenchange',()=>{
   if(document.fullscreenElement){btn.textContent='✕';btn.onclick=()=>document.exitFullscreen&&document.exitFullscreen();}
   else{btn.textContent='⛶';btn.onclick=goFullscreen;}
 });
-// Auto-enable fullscreen on load
+// Auto-enable fullscreen on load and orientation change
+window.addEventListener('orientationchange',()=>{
+  setTimeout(()=>{applyLayout();buildReels();buildLineNums();if(window.innerWidth>window.innerHeight)goFullscreen();},500);
+  setTimeout(()=>{if(window.innerWidth>window.innerHeight)goFullscreen();},800);
+});
 goFullscreen();
 </script>
 </body>

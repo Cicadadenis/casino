@@ -1364,9 +1364,11 @@ function startBonusRing(bet, lines, sbCount){
   document.getElementById('brgSpinBtn').disabled = false;
   document.getElementById('brgCollectBtn').classList.remove('show');
 
+  document.getElementById('bonusRingScreen').classList.add('show');
+  // Force layout recalc before building ring
+  document.getElementById('bonusRingScreen').offsetHeight;
   buildRingCells();
   buildMiniReels();
-  document.getElementById('bonusRingScreen').classList.add('show');
 }
 
 function buildRingCells(){
@@ -1823,6 +1825,10 @@ function init(){
 }
 
 window.addEventListener('resize',()=>{applyLayout();buildReels();buildLineNums();});
+window.addEventListener('orientationchange',()=>{
+  setTimeout(()=>{applyLayout();buildReels();buildLineNums();if(window.innerWidth>window.innerHeight)goFullscreen();},500);
+  setTimeout(()=>{if(window.innerWidth>window.innerHeight)goFullscreen();},800);
+});
 window.addEventListener('load',init);
 
 // Touch support - spacebar/enter to spin

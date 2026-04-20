@@ -1090,7 +1090,7 @@ function updateHUD(){
   const bet=BET_OPTS[betIdx];
   const lines=LINE_OPTS[linesIdx];
   ['balanceDisplay','balSide'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=b;pop(el);}});
-  ['betDisplay','betSide','betCtrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=bet*lines;});
+  ['betDisplay','betSide','betCtrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=bet;});
   ['linesDisplay','linesSide','linesCtrl'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=lines;});
   const el=document.getElementById('winDisplay');if(el){el.textContent=lastWin.toFixed(0);if(lastWin>0)pop(el);}
 }
@@ -1471,6 +1471,10 @@ function init(){
   goFullscreen();
 }
 window.addEventListener('resize',()=>{applyLayout();buildReels();buildLineNums();});
+window.addEventListener('orientationchange',()=>{
+  setTimeout(()=>{applyLayout();buildReels();buildLineNums();if(window.innerWidth>window.innerHeight)goFullscreen();},500);
+  setTimeout(()=>{if(window.innerWidth>window.innerHeight)goFullscreen();},800);
+});
 window.addEventListener('load',init);
 document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter') spin();});
 </script>
